@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Liste de Présence - {{ repartition.examen.module }}</title>
+    <style>
+        @media print {
+            body { margin: 0; padding: 20px; }
+            .no-print { display: none; }
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 { text-align: center; color: #333; }
+        .info-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        .info-row {
+            margin: 8px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 180px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .signature {
+            width: 120px;
+            text-align: center;
+        }
+        .button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <button class="no-print button" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="no-print button" onclick="window.close()">❌ Fermer</button>
+    
+    <h1>LISTE DE PRÉSENCE</h1>
+    <h2 style="text-align: center;">{{ repartition.examen.module }}</h2>
+    
+    <div class="info-box">
+        <div class="info-row">
+            <span class="info-label">Session:</span>
+            <span>{{ repartition.examen.session }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Date:</span>
+            <span>{{ repartition.examen.date|date:"d/m/Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Horaire:</span>
+            <span>{{ repartition.examen.heure_debut }} - {{ repartition.examen.heure_fin }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Niveau:</span>
+            <span>{{ repartition.examen.get_niveau_display }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Année Universitaire:</span>
+            <span>{{ repartition.examen.annee }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Amphi:</span>
+            <span>{{ repartition.amphi.nom }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Surveillants:</span>
+            <span>{% for s in repartition.surveillants.all %}{{ s.nom }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+        </div>
+    </div>
+    
+    {% if students %}
+    <table>
+        <thead>
+            <tr>
+                <th>N°</th>
+                <th>NOM</th>
+                <th>PRÉNOM</th>
+                <th>APOGÉE</th>
+                <th class="signature">SIGNATURE</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ student.nom|upper }}</td>
+                <td>{{ student.prenom }}</td>
+                <td>{{ student.apogee }}</td>
+                <td class="signature"></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <p><strong>Total étudiants: {{ students|length }}</strong></p>
+    {% else %}
+    <p><em>Aucun étudiant assigné</em></p>
+    {% endif %}
+    
+    <div class="footer">
+        <p>Liste générée le {{ now|date:"d/m/Y H:i" }}</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded - starting AJAX functionality");
+    
+    // Store the current exam ID to avoid unnecessary reloads
+    var currentExamId = null;
+    
+    // In change_form.html, update the loadStudentsByExam function:
+function loadStudentsByExam(examId, preserveChosen = false) {
+    console.log("=== loadStudentsByExam called ===");
+    console.log("examId:", examId);
+    console.log("preserveChosen:", preserveChosen);
+    
+    if (!examId || examId === '') {
+        console.log("No exam selected");
+        if (!preserveChosen) {
+            updateAvailableStudentsList([]);
+        }
+        return;
+    }
+    
+    // Get repartition ID if editing
+    var repartitionId = '';
+    var repartitionIdField = document.querySelector('#id');
+    if (repartitionIdField && repartitionIdField.value) {
+        repartitionId = repartitionIdField.value;
+        console.log("Repartition ID found:", repartitionId);
+    }
+    
+    var url = '/examens/ajax/get-students-by-exam/?exam_id=' + examId;
+    if (repartitionId) {
+        url += '&repartition_id=' + repartitionId;
+    }
+    console.log("Fetching URL:", url);
+    
+    fetch(url)
+        .then(response => {
+            console.log("Response status:", response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log("=== FULL RESPONSE DATA ===");
+            console.log(data);
+            console.log("Students array:", data.students);
+            console.log("Available count:", data.available_count);
+            
+            if (data.success) {
+                // Log each student
+                if (data.students) {
+                    data.students.forEach((student, index) => {
+                        console.log(`Student ${index + 1}:`, student);
+                    });
+                }
+                updateAvailableStudentsList(data.students);
+                showExamInfo(data);
+            } else {
+                console.error("Server error:", data.error);
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("=== FETCH ERROR ===");
+            console.error(error);
+        });
+}
+    function showExamInfo(data) {
+        var infoDiv = document.querySelector('#exam-info');
+        if (!infoDiv) {
+            infoDiv = document.createElement('div');
+            infoDiv.id = 'exam-info';
+            infoDiv.style.cssText = 'background-color: #d4edda; padding: 10px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #28a745;';
+            var fieldEtudiants = document.querySelector('.field-etudiants');
+            if (fieldEtudiants) {
+                fieldEtudiants.prepend(infoDiv);
+            }
+        }
+        infoDiv.innerHTML = '<strong>📚 Exam:</strong> ' + data.niveau_display + ' - ' + data.annee + 
+                           ' | <strong>👨‍🎓 Total Students:</strong> ' + data.students.length;
+    }
+    
+    function updateAvailableStudentsListExcludingChosen(allStudents) {
+        var availableSelect = document.querySelector('#id_etudiants_from');
+        var chosenSelect = document.querySelector('#id_etudiants_to');
+        
+        if (!availableSelect) {
+            console.error("Could not find students select element");
+            return;
+        }
+        
+        // Get IDs of already chosen students
+        var chosenIds = [];
+        if (chosenSelect) {
+            for (var i = 0; i < chosenSelect.options.length; i++) {
+                chosenIds.push(chosenSelect.options[i].value);
+            }
+        }
+        
+        // Filter out students that are already chosen
+        var availableStudents = allStudents.filter(function(student) {
+            return !chosenIds.includes(String(student.id));
+        });
+        
+        // Clear current options
+        availableSelect.innerHTML = '';
+        
+        if (availableStudents.length === 0) {
+            var emptyOption = document.createElement('option');
+            emptyOption.textContent = 'No available students';
+            emptyOption.disabled = true;
+            availableSelect.appendChild(emptyOption);
+        } else {
+            // Add available students
+            availableStudents.forEach(function(student) {
+                var option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.nom + ' ' + student.prenom + ' (' + student.apogee + ')';
+                availableSelect.appendChild(option);
+            });
+        }
+        
+        // Update the count in the header
+        var header = document.querySelector('.selector-available h2');
+        if (header) {
+            header.textContent = 'Available students (' + availableStudents.length + ')';
+        }
+    }
+    
+    function updateAvailableStudentsList(students, loading = false, error = false) {
+        var availableSelect = document.querySelector('#id_etudiants_from');
+        var chosenSelect = document.querySelector('#id_etudiants_to');
+        
+        if (!availableSelect) {
+            console.error("Could not find students select element");
+            return;
+        }
+        
+        // Clear current options
+        availableSelect.innerHTML = '';
+        
+        if (loading) {
+            var loadingOption = document.createElement('option');
+            loadingOption.textContent = 'Loading students...';
+            loadingOption.disabled = true;
+            availableSelect.appendChild(loadingOption);
+            return;
+        }
+        
+        if (error) {
+            var errorOption = document.createElement('option');
+            errorOption.textContent = 'Error loading students. Please refresh.';
+            errorOption.disabled = true;
+            errorOption.style.color = 'red';
+            availableSelect.appendChild(errorOption);
+            return;
+        }
+        
+        if (students.length === 0) {
+            var emptyOption = document.createElement('option');
+            emptyOption.textContent = 'No students found for this exam';
+            emptyOption.disabled = true;
+            availableSelect.appendChild(emptyOption);
+            return;
+        }
+        
+        // Clear chosen list if this is a new exam (not preserving)
+        if (chosenSelect && chosenSelect.options.length > 0) {
+            var keepChosen = confirm('Exam changed. Do you want to keep previously selected students? Click Cancel to clear them.');
+            if (!keepChosen) {
+                chosenSelect.innerHTML = '';
+                var chosenHeader = document.querySelector('.selector-chosen h2');
+                if (chosenHeader) {
+                    chosenHeader.textContent = 'Chosen students (0)';
+                }
+                // Add all students to available
+                students.forEach(function(student) {
+                    var option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = student.nom + ' ' + student.prenom + ' (' + student.apogee + ')';
+                    availableSelect.appendChild(option);
+                });
+            } else {
+                // Keep chosen, filter them out from available
+                var chosenIds = [];
+                for (var i = 0; i < chosenSelect.options.length; i++) {
+                    chosenIds.push(chosenSelect.options[i].value);
+                }
+                
+                var availableStudents = students.filter(function(student) {
+                    return !chosenIds.includes(String(student.id));
+                });
+                
+                availableStudents.forEach(function(student) {
+                    var option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = student.nom + ' ' + student.prenom + ' (' + student.apogee + ')';
+                    availableSelect.appendChild(option);
+                });
+            }
+        } else {
+            // No chosen students, add all
+            students.forEach(function(student) {
+                var option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.nom + ' ' + student.prenom + ' (' + student.apogee + ')';
+                availableSelect.appendChild(option);
+            });
+        }
+        
+        // Update the count in the header
+        var header = document.querySelector('.selector-available h2');
+        if (header) {
+            header.textContent = 'Available students (' + availableSelect.options.length + ')';
+        }
+    }
+    
+    // Function to handle moving students and refreshing the available list
+    function refreshAvailableList() {
+        var examId = document.querySelector('#id_examen').value;
+        if (examId) {
+            // Reload but preserve chosen students
+            fetch('/examens/ajax/get-students-by-exam/?exam_id=' + examId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateAvailableStudentsListExcludingChosen(data.students);
+                    }
+                })
+                .catch(error => console.error("Error refreshing:", error));
+        }
+    }
+    
+    // Find the exam select element
+    var examSelect = document.querySelector('#id_examen');
+    
+    if (examSelect) {
+        console.log("Exam select found");
+        
+        // Function to handle exam change
+        function onExamChange() {
+            var examId = examSelect.value;
+            console.log("Exam changed to:", examId);
+            loadStudentsByExam(examId, false);
+        }
+        
+        // Listen for change event
+        examSelect.addEventListener('change', onExamChange);
+        
+        // For Select2, also listen to select2:select event
+        $(examSelect).on('select2:select', function(e) {
+            console.log("Select2 selection changed:", e.params.data.id);
+            loadStudentsByExam(e.params.data.id, false);
+        });
+        
+        // Load initial students if exam is pre-selected
+        var initialExamId = examSelect.value;
+        if (initialExamId && initialExamId !== '') {
+            console.log("Initial exam selected:", initialExamId);
+            setTimeout(function() {
+                loadStudentsByExam(initialExamId, false);
+            }, 300);
+        } else {
+            console.log("No initial exam selected");
+        }
+    } else {
+        console.log("Exam select not found");
+    }
+    
+    // Intercept the move buttons to refresh available list after moving
+    function setupMoveButtons() {
+        // Choose button (move right)
+        var chooseBtn = document.querySelector('.selector-choose');
+        if (chooseBtn) {
+            chooseBtn.addEventListener('click', function() {
+                setTimeout(refreshAvailableList, 100);
+            });
+        }
+        
+        // Remove button (move left)
+        var removeBtn = document.querySelector('.selector-remove');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                setTimeout(refreshAvailableList, 100);
+            });
+        }
+        
+        // Add all button
+        var addAllBtn = document.querySelector('.selector-add');
+        if (addAllBtn) {
+            addAllBtn.addEventListener('click', function() {
+                setTimeout(refreshAvailableList, 100);
+            });
+        }
+        
+        // Clear all button
+        var clearAllBtn = document.querySelector('.selector-clear');
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', function() {
+                setTimeout(refreshAvailableList, 100);
+            });
+        }
+    }
+    
+    // Set up move buttons after a short delay
+    setTimeout(setupMoveButtons, 500);
+    
+    // Also set up a mutation observer to watch for button additions
+    var observer = new MutationObserver(function(mutations) {
+        setupMoveButtons();
+    });
+    
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    // Function to refresh students when coming back from popup
+    function checkAndRefreshStudents() {
+        var examSelect = document.querySelector('#id_examen');
+        if (examSelect && examSelect.value && examSelect.value !== '') {
+            console.log("Refreshing students after popup");
+            loadStudentsByExam(examSelect.value, true);
+        }
+    }
+    
+    // Listen for focus events (when returning from popup)
+    window.addEventListener('focus', function() {
+        setTimeout(checkAndRefreshStudents, 200);
+    });
+});
+</script>
+
+<style>
+#exam-info {
+    background-color: #d4edda;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border-left: 4px solid #28a745;
+    font-size: 14px;
+}
+.selector-available select, .selector-chosen select {
+    min-height: 250px;
+}
+</style>
+{% endblock %}

@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'jazzmin',
     "import_export",
+    "django_extensions",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -61,7 +62,7 @@ ROOT_URLCONF = 'fmpl_exam.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -109,7 +110,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fr'
 
 TIME_ZONE = 'UTC'
 
@@ -139,5 +140,11 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenue - Gestion des Examens",
 
     "copyright": "Faculté de Médecine et Pharmacie Laayoune",
+
+     "topmenu_links": [
+        {"name": "Dashboard", "url": "admin:index"},
+        {"name": "Calendrier des Examens", "url": "/examens/calendrier/"},
+         {"name":"Convocation", "url": "/examens/convocations/"},
+    ],
 
 }

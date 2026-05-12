@@ -1,0 +1,225 @@
+<!-- templates/examens/convocations_list.html -->
+{% load static %}
+
+{% block extrahead %}
+<style>
+    .convocation-container {
+        padding: 20px;
+        background: #f5f5f5;
+        min-height: 100vh;
+    }
+    
+    .filter-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .filter-bar select, .filter-bar button {
+        padding: 8px 15px;
+        margin-right: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+    
+    .filter-bar button {
+        background: #1a472a;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .filter-bar button:hover {
+        background: #0d2818;
+    }
+    
+    .surveillants-table {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .surveillants-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .surveillants-table th {
+        background: #1a472a;
+        color: white;
+        padding: 12px;
+        text-align: left;
+    }
+    
+    .surveillants-table td {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .surveillants-table tr:hover {
+        background: #f9f9f9;
+    }
+    
+    .btn-convocation {
+        background: #27ae60;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 12px;
+        margin-right: 5px;
+    }
+    
+    .btn-convocation:hover {
+        background: #229954;
+    }
+    
+    .btn-bulk {
+        background: #2980b9;
+        margin-bottom: 15px;
+        display: inline-block;
+    }
+    
+    .btn-bulk:hover {
+        background: #1c638e;
+    }
+    
+    .session-info {
+        background: #e8f4f8;
+        padding: 10px 15px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+    
+    .checkbox-col {
+        width: 30px;
+        text-align: center;
+    }
+    
+    .actions-bar {
+        margin-bottom: 15px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .btn-primary {
+        background: #1a472a;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="convocation-container">
+    <h1>📄 Convocations des Surveillants</h1>
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <form method="get" action="">
+            <label>📅 Filtrer par session :</label>
+            <select name="session" onchange="this.form.submit()">
+                <option value="">Toutes les sessions</option>
+                {% for session in sessions %}
+                <option value="{{ session.id }}" {% if selected_session.id == session.id %}selected{% endif %}>
+                    {{ session.nom }} - {{ session.get_type_display }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    {% if selected_session %}
+    <div class="session-info">
+        <strong>📌 Session sélectionnée :</strong> {{ selected_session.nom }} - {{ selected_session.get_type_display }}
+        ({{ selected_session.date_debut|date:"d/m/Y" }} - {{ selected_session.date_fin|date:"d/m/Y" }})
+    </div>
+    {% endif %}
+    
+    <!-- Actions Bar -->
+    <div class="actions-bar">
+        <button class="btn-primary" onclick="generateSelectedConvocations()">📄 Générer les convocations sélectionnées</button>
+        <span style="color: #666; font-size: 12px;">{{ surveillants|length }} surveillant(s) trouvé(s)</span>
+    </div>
+    
+    <!-- Surveillants Table -->
+    <div class="surveillants-table">
+        <table>
+            <thead>
+                <tr>
+                    <th class="checkbox-col"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+                    <th>NOM</th>
+                    <th>EMAIL</th>
+                    <th>TÉLÉPHONE</th>
+                    <th>SPÉCIALITÉ</th>
+                    <th>NOMBRE D'EXAMENS</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for surveillant in surveillants %}
+                <tr>
+                    <td class="checkbox-col"><input type="checkbox" class="surv-checkbox" value="{{ surveillant.id }}"></td>
+                    <td><strong>{{ surveillant.nom }}</strong></td>
+                    <td>{{ surveillant.email|default:"-" }}</td>
+                    <td>{{ surveillant.telephone|default:"-" }}</td>
+                    <td>{{ surveillant.specialite|default:"-" }}</td>
+                    <td style="text-align: center;">{{ surveillant.examens_count }}</td>
+                    <td>
+                        {% if session_id %}
+                        <a href="{% url 'examens:generate_convocation_surveillant_session' surveillant.id session_id %}" class="btn-convocation" target="_blank">📄 Convocation</a>
+                        {% else %}
+                        <a href="{% url 'examens:generate_convocation_surveillant' surveillant.id %}" class="btn-convocation" target="_blank">📄 Convocation</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 40px;">
+                        ❌ Aucun surveillant trouvé pour cette session
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function toggleAll(source) {
+    var checkboxes = document.querySelectorAll('.surv-checkbox');
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+
+function generateSelectedConvocations() {
+    var checkboxes = document.querySelectorAll('.surv-checkbox:checked');
+    var selectedIds = [];
+    checkboxes.forEach(function(cb) {
+        selectedIds.push(cb.value);
+    });
+    
+    if (selectedIds.length === 0) {
+        alert('Veuillez sélectionner au moins un surveillant');
+        return;
+    }
+    
+    var sessionId = '{{ session_id }}';
+    var url = '/examens/convocations/bulk/?ids=' + selectedIds.join(',');
+    if (sessionId) {
+        url += '&session=' + sessionId;
+    }
+    
+    window.location.href = url;
+}
+</script>
+{% endblock %}

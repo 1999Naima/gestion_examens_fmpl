@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Planning des Examens</title>
+    <meta charset="UTF-8">
+    
+    <!-- html2pdf library for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Arial', 'DejaVu Sans', sans-serif;
+    background:#f5f5f5;
+    padding:20px;
+    margin: 0;
+}
+
+/* Container for PDF export */
+#pdf-content {
+    background: white;
+}
+
+/* Header styles */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+}
+
+.logo-container {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.logo {
+    width: 20%;
+    height: auto;
+    display: inline-block;
+}
+
+.university-name-ar {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1a472a;
+    margin-bottom: 5px;
+}
+
+.university-name-fr {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1a472a;
+    margin-bottom: 5px;
+}
+
+.university-sub {
+    font-size: 14px;
+    color: #555;
+}
+
+.separator {
+    width: 80%;
+    height: 2px;
+    background: #c9a84c;
+    margin: 15px auto;
+}
+
+.exam-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 20px 0 10px 0;
+    color: #0c1738;
+}
+
+.exam-subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.academic-year {
+    text-align: center;
+    font-size: 24px;
+    color: #666;
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.export-btn, .dashboard-btn {
+    padding:10px 20px;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:16px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.export-btn {
+    background:#2c3e50;
+}
+
+.export-btn:hover {
+    background:#1a252f;
+}
+
+.dashboard-btn {
+    background:#27ae60;
+}
+
+.dashboard-btn:hover {
+    background:#229954;
+}
+
+.filter-bar{
+    text-align:center;
+    margin:20px 0;
+    padding:15px;
+    background:white;
+    border-radius:5px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.filter-bar select, .filter-bar button{
+    padding:8px 15px;
+    margin:0 5px;
+    border-radius:5px;
+    border:1px solid #ddd;
+    cursor:pointer;
+}
+
+.filter-bar button{
+    background:#2c3e50;
+    color:white;
+    border:none;
+}
+
+.filter-bar button:hover{
+    background:#1a252f;
+}
+
+.filter-info {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 8px;
+    background: #e8f4f8;
+    border-radius: 5px;
+    font-size: 13px;
+    color: #1a472a;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    margin-top: 20px;
+}
+
+th, td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+    vertical-align:top;
+}
+
+th{
+    background:#0c1738;
+    color:white;
+    font-weight: bold;
+}
+
+.date-col{
+    font-weight:bold;
+    background:#f0f0f0;
+}
+
+.date-day{
+    font-size:12px;
+    color:#666;
+    margin-top:5px;
+}
+
+.exam{
+    margin-bottom:10px;
+    padding:8px;
+    border-radius:5px;
+    background:#f9f9f9;
+    border-left: 3px solid #0c1738;
+    text-align:left;
+}
+
+.exam strong{
+    display:block;
+    font-size:14px;
+}
+
+.exam small{
+    font-size:11px;
+    color:#666;
+}
+
+.footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 10px;
+    color: #999;
+    padding: 15px;
+    border-top: 1px solid #ddd;
+}
+
+/* PDF print styles - hide buttons and filters */
+@media print {
+    .no-print, .button-group, .filter-bar, .filter-info {
+        display: none !important;
+    }
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    .logo {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    th {
+        background: #1a472a;
+        color: white;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="button-group no-print">
+    <button class="export-btn" onclick="exportPDF()">📄 Exporter en PDF</button>
+    <a href="/admin/" class="dashboard-btn">🏠 Retour au Dashboard Admin</a>
+</div>
+
+<div class="filter-bar no-print">
+    <label>📅 Session:</label>
+    <select id="session-select">
+        <option value="">Toutes les sessions actives</option>
+        {% for session in sessions %}
+        <option value="{{ session.id }}" {% if selected_session|stringformat:"s" == session.id|stringformat:"s" %}selected{% endif %}>
+            {{ session.nom }} - {{ session.get_type_display }} 
+        </option>
+        {% endfor %}
+    </select>
+    
+    <button onclick="filterByType('normal')">📘 Sessions Normales</button>
+    <button onclick="filterByType('rattrapage')">🔄 Rattrapage</button>
+    <button onclick="filterSession()">Filtrer</button>
+    <button onclick="resetFilter()">Réinitialiser</button>
+</div>
+
+
+<!-- PDF EXPORT CONTENT - Only this part will be exported -->
+<div id="pdf-content">
+    
+   
+    <div class="exam-title">
+        <div class="logo-container">
+            {% load static %}
+            <img src="{% static 'images/logo.png' %}" alt="Logo FMPL" class="logo">
+        </div>
+         <div class="academic-year">
+        Année Universitaire 2025-2026
+         </div>
+        PLANNING DES EXAMENS  1ère, 2ème, 3ème, 4ème et 5ème Année
+    </div>
+    <div class="exam-subtitle">
+       
+    </div>
+    
+    <div class="academic-year">
+     Session : {{ filter_info }}
+    </div>
+    <div id="calendar-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>1ère Année</th>
+                    <th>2ème Année</th>
+                    <th>3ème Année</th>
+                    <th>4ème Année</th>
+                    <th>5ème Année</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for date, examens in planning.items %}
+            <tr>
+                <td class="date-col">
+                    {{ date|date:"d/m/Y" }}
+                    <div class="date-day">{{ date|date:"l" }}</div>
+                </td>
+
+                <td>
+                    {% for e in examens %}
+                        {% if e.niveau == "1" %}
+                            <div class="exam">
+                                <strong>{{ e.module }}</strong>
+                                <small>{{ e.heure_debut|time:"H:i" }} - {{ e.heure_fin|time:"H:i" }}</small>
+                            </div>
+                        {% endif %}
+                    {% empty %}
+                        <span style="color:#999;">-</span>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% for e in examens %}
+                        {% if e.niveau == "2" %}
+                            <div class="exam">
+                                <strong>{{ e.module }}</strong>
+                                <small>{{ e.heure_debut|time:"H:i" }} - {{ e.heure_fin|time:"H:i" }}</small>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% for e in examens %}
+                        {% if e.niveau == "3" %}
+                            <div class="exam">
+                                <strong>{{ e.module }}</strong>
+                                <small>{{ e.heure_debut|time:"H:i" }} - {{ e.heure_fin|time:"H:i" }}</small>
+                            </div>
+                        {% endif %}
+                    {% empty %}
+                        <span style="color:#999;">-</span>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% for e in examens %}
+                        {% if e.niveau == "4" %}
+                            <div class="exam">
+                                <strong>{{ e.module }}</strong>
+                                <small>{{ e.heure_debut|time:"H:i" }} - {{ e.heure_fin|time:"H:i" }}</small>
+                            </div>
+                        {% endif %}
+                    {% empty %}
+                        <span style="color:#999;">-</span>
+                    {% endfor %}
+                </td>
+
+                <td>
+                    {% for e in examens %}
+                        {% if e.niveau == "5" %}
+                            <div class="exam">
+                                <strong>{{ e.module }}</strong>
+                                <small>{{ e.heure_debut|time:"H:i" }} - {{ e.heure_fin|time:"H:i" }}</small>
+                            </div>
+                        {% endif %}
+                    {% empty %}
+                        <span style="color:#999;">-</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align:center; padding:50px;">
+                    ❌ Aucun examen trouvé pour cette session
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="footer">
+        Faculté de Médecine et de Pharmacie - Laâyoune | Université Ibn Zohr - Agadir
+    </div>
+</div>
+
+<script>
+function exportPDF() {
+    // Get only the PDF content div
+    var element = document.getElementById('pdf-content');
+    
+    var opt = {
+        margin:        [10, 10, 10, 10],
+        filename:     'planning_examens_FMPL_Laayoune.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+    
+    // Export only the pdf-content div
+    html2pdf().set(opt).from(element).save();
+}
+
+function filterByType(type) {
+    var url = new URL(window.location.href);
+    url.searchParams.set('type', type);
+    url.searchParams.delete('session');
+    window.location.href = url.toString();
+}
+
+function filterSession() {
+    var sessionId = document.getElementById('session-select').value;
+    var url = new URL(window.location.href);
+    if (sessionId) {
+        url.searchParams.set('session', sessionId);
+    } else {
+        url.searchParams.delete('session');
+    }
+    url.searchParams.delete('type');
+    window.location.href = url.toString();
+}
+
+function resetFilter() {
+    var url = new URL(window.location.href);
+    url.searchParams.delete('session');
+    url.searchParams.delete('type');
+    window.location.href = url.toString();
+}
+
+document.getElementById('session-select').addEventListener('change', function() {
+    filterSession();
+});
+</script>
+</body>
+</html>
