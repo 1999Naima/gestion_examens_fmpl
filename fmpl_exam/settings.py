@@ -135,7 +135,7 @@ JAZZMIN_SETTINGS = {
     "site_title": "FMPL Examens",
     "site_header": "Gestion des Examens FMPL",
     "site_brand": "FMPL",
-    "site_logo": "images/logo.png",
+    "site_logo": "images/logo_white2.png",
 
     "welcome_sign": "Bienvenue - Gestion des Examens",
 
@@ -148,3 +148,10 @@ JAZZMIN_SETTINGS = {
     ],
 
 }
+
+# settings.py
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+

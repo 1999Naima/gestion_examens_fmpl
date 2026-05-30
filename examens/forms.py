@@ -9,17 +9,8 @@ class RepartitionAdminForm(forms.ModelForm):
     class Meta:
         model = Repartition
         fields = "__all__"
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        
-        # DON'T set queryset to none - this breaks the filter_horizontal widget
-        # Instead, keep all students initially, AJAX will filter down
-        self.fields['etudiants'].queryset = Etudiant.objects.all()
-        
-        # Customize the examen field display
-        self.fields['examen'].label_from_instance = lambda obj: f"{obj.module} - {obj.get_niveau_display()} - {obj.date} ({obj.session})"
-
-        
+    
+    
     def clean(self):
         cleaned_data = super().clean()
         
@@ -31,20 +22,44 @@ class RepartitionAdminForm(forms.ModelForm):
         if not examen:
             return cleaned_data
         
+        # Additional validation: ensure all students belong to correct niveau and annee
+        if etudiants:
+            invalid_students = etudiants.exclude(
+                niveau=examen.niveau,
+                annee=examen.annee
+            )
+            if invalid_students.exists():
+                invalid_names = ", ".join([str(s) for s in invalid_students[:5]])
+                raise ValidationError(
+                    f"Les étudiants suivants n'appartiennent pas au niveau {examen.get_niveau_display()} "
+                    f"et à l'année {examen.annee}: {invalid_names}"
+                )
+        
         # -----------------------------
-        # ✅ 1. Surveillant conflict
+        # ✅ 1. Surveillant conflict (check time overlap)
         # -----------------------------
         if surveillants:
             for surveillant in surveillants:
-                conflict = Repartition.objects.filter(
+                # Get all repartitions where this surveillant is assigned on the same date
+                conflicting_repartitions = Repartition.objects.filter(
                     surveillants=surveillant,
                     examen__date=examen.date
-                ).exclude(pk=self.instance.pk).exists()
+                ).exclude(pk=self.instance.pk)
                 
-                if conflict:
-                    raise ValidationError(
-                        f"Surveillant '{surveillant.nom}' déjà assigné à un autre examen le {examen.date}"
+                for rep in conflicting_repartitions:
+                    other_exam = rep.examen
+                    # Check if times overlap
+                    time_overlap = (
+                        examen.heure_debut < other_exam.heure_fin and
+                        examen.heure_fin > other_exam.heure_debut
                     )
+                    
+                    if time_overlap:
+                        raise ValidationError(
+                            f"Surveillant '{surveillant.nom}' est déjà assigné à l'examen '{other_exam.module}' "
+                            f"le même jour de {other_exam.heure_debut} à {other_exam.heure_fin}. "
+                            f"Conflit d'horaire avec l'examen actuel ({examen.heure_debut} - {examen.heure_fin})."
+                        )
         
         # -----------------------------
         # ✅ 2. Amphi conflict

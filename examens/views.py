@@ -137,7 +137,6 @@ def get_students_by_exam(request):
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': str(e)})
 
-
 @staff_member_required
 def generate_presence_pdf(request, repartition_id):
     """Generate PDF presence list for a single repartition"""
@@ -917,3 +916,23 @@ def convocation_bulk_pdf(request):
     response['Content-Disposition'] = 'attachment; filename="convocations_surveillants.zip"'
     
     return response
+
+
+
+# examens/views.py
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.contrib.admin.views.decorators import staff_member_required
+from .models import Repartition
+from .pdf_generator import ProcesVerbalPDF
+
+@staff_member_required
+def generate_proces_verbal(request, repartition_id):
+    """Generate Proces Verbal PDF for a specific repartition"""
+    repartition = get_object_or_404(Repartition, id=repartition_id)
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="proces_verbal_{repartition.id}.pdf"'
+    
+    pdf_generator = ProcesVerbalPDF(repartition)
+    return pdf_generator.generate(response)

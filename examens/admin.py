@@ -35,11 +35,22 @@ class RepartitionAdmin(admin.ModelAdmin):
     form = RepartitionAdminForm
     filter_horizontal = ("etudiants",)
     change_form_template = "admin/examens/repartition/change_form.html"
-    list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'presence_button')
+    list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'presence_button','proces_verbal_button')
     list_filter = ('examen__niveau', 'examen__annee', 'amphi')
     search_fields = ('examen__module', 'amphi__nom')
     actions = ['generate_presence_list']
     
+       # In RepartitionAdmin class
+    def proces_verbal_button(self, obj):
+       """Add Proces Verbal button only"""
+       return format_html(
+           '<a class="button" href="/examens/proces-verbal/{}/" target="_blank" style="background-color: #dc3545; color: white;">📄 Procès Verbal</a>',
+            obj.id
+        )
+    proces_verbal_button.short_description = "Procès Verbal"
+
+# Remove the presence_button if you don't want it
+
     def presence_button(self, obj):
         """Add a button in list display"""
         # Direct URL path - no reverse needed
@@ -74,14 +85,13 @@ class RepartitionAdmin(admin.ModelAdmin):
     
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-        from django.contrib import messages
-        messages.success(request, f"Repartition saved successfully with {obj.etudiants.count()} students!")
     
-    def response_add(self, request, obj, post_url_continue=None):
-        return HttpResponseRedirect(reverse("admin:examens_examen_changelist"))
-    
-    def response_change(self, request, obj):
-        return HttpResponseRedirect(reverse("admin:examens_examen_changelist"))
+    # REMOVE or COMMENT OUT these methods to use default behavior:
+    # def response_add(self, request, obj, post_url_continue=None):
+    #     return HttpResponseRedirect(reverse("admin:examens_examen_changelist"))
+    # 
+    # def response_change(self, request, obj):
+    #     return HttpResponseRedirect(reverse("admin:examens_examen_changelist"))
     
     class Media:
         js = ('https://code.jquery.com/jquery-3.6.0.min.js',)
