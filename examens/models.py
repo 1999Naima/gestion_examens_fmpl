@@ -1,3 +1,4 @@
+# examens/models.py
 from django.db import models
 from django.forms import ValidationError
 
@@ -24,18 +25,40 @@ class Session(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.get_type_display()})"
     
-# Create your models here.
+
 class Examen(models.Model):
+    # Semester choices from 1 to 12
+    SEMESTER_CHOICES = [
+        ('1', 'Semestre 1'),
+        ('2', 'Semestre 2'),
+        ('3', 'Semestre 3'),
+        ('4', 'Semestre 4'),
+        ('5', 'Semestre 5'),
+        ('6', 'Semestre 6'),
+        ('7', 'Semestre 7'),
+        ('8', 'Semestre 8'),
+        ('9', 'Semestre 9'),
+        ('10', 'Semestre 10'),
+        ('11', 'Semestre 11'),
+        ('12', 'Semestre 12'),
+    ]
+    
     module = models.CharField(max_length=150)
+    semester = models.CharField(max_length=2, choices=SEMESTER_CHOICES, default='1', verbose_name="Semestre")
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='examens')
     date = models.DateField()
     heure_debut = models.TimeField()
     heure_fin = models.TimeField()
-    niveau = models.CharField(max_length=2,choices=Etudiant.NIVEAU_CHOICES)
-    annee = models.ForeignKey(Annee,on_delete=models.CASCADE)
-    def __str__(self):
-     return f"{self.module} - {self.session} - {self.get_niveau_display()}"
+    niveau = models.CharField(max_length=2, choices=Etudiant.NIVEAU_CHOICES)
+    annee = models.ForeignKey(Annee, on_delete=models.CASCADE)
     
+    
+    def __str__(self):
+        return f"{self.module} - {self.session} - {self.get_niveau_display()} - {self.get_semester_display()}"
+    
+    def get_semester_display(self):
+        """Return 'Semestre 1' instead of '1'"""
+        return dict(self.SEMESTER_CHOICES).get(self.semester, self.semester)
 
     def clean(self):
         from django.core.exceptions import ValidationError
@@ -51,7 +74,7 @@ class Examen(models.Model):
         conflits = Examen.objects.filter(
             date=self.date,
             annee=self.annee,
-            niveau=self.niveau  # ← FIXED: Added niveau to filter
+            niveau=self.niveau
         ).exclude(pk=self.pk)
 
         for exam in conflits:
@@ -68,12 +91,12 @@ class Examen(models.Model):
                     f"et la même année universitaire."
                 )
 
+
 class Repartition(models.Model):
-    examen = models.ForeignKey(Examen,on_delete=models.CASCADE)
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE)
     surveillants = models.ManyToManyField(Surveillant)
-    amphi = models.ForeignKey(Amphi,on_delete=models.CASCADE)
-    etudiants = models.ManyToManyField(Etudiant, blank=True)  
+    amphi = models.ForeignKey(Amphi, on_delete=models.CASCADE)
+    etudiants = models.ManyToManyField(Etudiant, blank=True)
+    
     def __str__(self):
         return f"{self.examen} - {self.amphi}"
-
-

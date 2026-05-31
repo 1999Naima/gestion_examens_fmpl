@@ -21,41 +21,44 @@ class ExamenAdmin(admin.ModelAdmin):
         "session",
         "date",
         "display_niveau",
+        "display_semester",  # Added semester field
         "annee",
     )
-    list_filter = ('niveau', 'annee', 'session', 'date')
+    list_filter = ('niveau', 'semester', 'annee', 'session', 'date')  # Added semester to filters
     search_fields = ('module',)
     
     def display_niveau(self, obj):
         return obj.get_niveau_display()
     display_niveau.short_description = "Niveau"
+    
+    def display_semester(self, obj):
+        return obj.get_semester_display()
+    display_semester.short_description = "Semestre"
 
 @admin.register(Repartition)
 class RepartitionAdmin(admin.ModelAdmin):
     form = RepartitionAdminForm
     filter_horizontal = ("etudiants",)
     change_form_template = "admin/examens/repartition/change_form.html"
-    list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'presence_button','proces_verbal_button')
-    list_filter = ('examen__niveau', 'examen__annee', 'amphi')
+    list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'presence_button', 'proces_verbal_button')
+    list_filter = ('examen__niveau', 'examen__semester', 'examen__annee', 'amphi')  # Added semester to filters
     search_fields = ('examen__module', 'amphi__nom')
     actions = ['generate_presence_list']
     
-       # In RepartitionAdmin class
+    # Proces Verbal button
     def proces_verbal_button(self, obj):
-       """Add Proces Verbal button only"""
-       return format_html(
-           '<a class="button" href="/examens/proces-verbal/{}/" target="_blank" style="background-color: #dc3545; color: white;">📄 Procès Verbal</a>',
+        """Add Proces Verbal button only"""
+        return format_html(
+            '<a class="button" href="/examens/proces-verbal/{}/" target="_blank" style="background-color: #dc3545; color: white;">📄 Procès Verbal</a>',
             obj.id
         )
     proces_verbal_button.short_description = "Procès Verbal"
 
-# Remove the presence_button if you don't want it
-
+    # Presence button
     def presence_button(self, obj):
         """Add a button in list display"""
-        # Direct URL path - no reverse needed
         return format_html(
-            '<a class="button" href="/examens/presence-pdf/{}/" target="_blank">📋 Voir liste de présence</a>',
+            '<a class="button" href="/examens/presence-pdf/{}/" target="_blank" style="background-color: #17a2b8; color: white;">📋 Liste de présence</a>',
             obj.id
         )
     presence_button.short_description = "Liste de présence"
@@ -85,13 +88,6 @@ class RepartitionAdmin(admin.ModelAdmin):
     
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
-    
-    # REMOVE or COMMENT OUT these methods to use default behavior:
-    # def response_add(self, request, obj, post_url_continue=None):
-    #     return HttpResponseRedirect(reverse("admin:examens_examen_changelist"))
-    # 
-    # def response_change(self, request, obj):
-    #     return HttpResponseRedirect(reverse("admin:examens_examen_changelist"))
     
     class Media:
         js = ('https://code.jquery.com/jquery-3.6.0.min.js',)
