@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mon Espace — FMPL</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#1a5c52;--teal-d:#0f3830;--teal-l:#227a6e;
+  --gold:#c9a84c;--gold-l:#fdf6e3;
+  --white:#fff;--off:#f4fbf9;
+  --txt:#1c2e2b;--txt-m:#4a706b;--txt-s:#8fb3ae;
+  --border:#cde8e4;--rad:12px;
+  --shadow:0 4px 24px rgba(15,56,48,.1);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);color:var(--txt)}
+
+/* ── Topbar ── */
+.topbar{background:var(--teal-d);padding:0 20px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+  color:var(--white);letter-spacing:.3px}
+.topbar-logo span{color:var(--gold)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.logout-btn{font-size:12px;color:var(--txt-s);text-decoration:none;
+  padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);
+  transition:all .2s}
+.logout-btn:hover{color:var(--white)}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,var(--teal-d) 0%,var(--teal) 100%);
+  padding:24px 20px 28px;color:var(--white)}
+.hero-label{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.8px;
+  text-transform:uppercase;margin-bottom:6px}
+.hero-name{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;
+  line-height:1.2;margin-bottom:4px}
+.hero-apogee{font-size:13px;color:rgba(255,255,255,.55);font-weight:300}
+.hero-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.hero-chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  border-radius:99px;padding:4px 12px;font-size:12px;color:rgba(255,255,255,.8)}
+.hero-chip.gold{background:rgba(201,168,76,.2);border-color:rgba(201,168,76,.3);
+  color:var(--gold)}
+
+/* ── Page ── */
+.page{max-width:700px;margin:0 auto;padding:20px 16px 48px}
+.section-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  color:var(--txt-s);letter-spacing:.8px;text-transform:uppercase;margin:24px 0 10px}
+
+/* ── Exam cards ── */
+.exam-card{background:var(--white);border-radius:16px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:10px;
+  border:1.5px solid var(--border);transition:border-color .2s,box-shadow .2s}
+.exam-card.today{border-color:var(--teal);
+  box-shadow:0 4px 24px rgba(26,92,82,.15)}
+.exam-card-head{display:flex;align-items:flex-start;
+  justify-content:space-between;gap:10px;margin-bottom:10px}
+.exam-module{font-family:'Syne',sans-serif;font-size:15px;
+  font-weight:700;color:var(--teal-d);line-height:1.3}
+.today-badge{background:var(--teal);color:var(--white);border-radius:99px;
+  padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.5px;
+  white-space:nowrap;flex-shrink:0}
+.exam-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.meta-item{display:flex;flex-direction:column;gap:2px}
+.meta-label{font-size:10px;color:var(--txt-s);letter-spacing:.5px;text-transform:uppercase}
+.meta-value{font-size:13px;color:var(--txt-m);font-weight:500}
+
+/* affectation box */
+.affectation-box{background:var(--off);border:1.5px solid var(--border);
+  border-radius:10px;padding:12px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+.affectation-left{display:flex;flex-direction:column;gap:3px}
+.aff-label{font-size:10px;color:var(--txt-s);letter-spacing:.5px;text-transform:uppercase}
+.aff-amphi{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--teal-d)}
+.aff-seat{display:flex;align-items:center;gap:6px;margin-top:4px}
+.seat-num{width:36px;height:36px;border-radius:10px;background:var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--white)}
+.seat-label{font-size:12px;color:var(--txt-m)}
+.no-affectation{font-size:12px;color:var(--txt-s);font-style:italic}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:48px 20px;color:var(--txt-s)}
+.empty-icon{font-size:44px;margin-bottom:12px}
+.empty p{font-size:14px}
+
+/* ── No repartition notice ── */
+.notice{background:var(--gold-l);border:1px solid rgba(201,168,76,.3);
+  border-radius:10px;padding:10px 14px;font-size:12px;color:#7a6020;
+  display:flex;align-items:center;gap:8px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-logo">FMP<span>L</span></div>
+  <div class="topbar-right">
+    <a href="/portal/etudiant/logout/" class="logout-btn">Déconnexion</a>
+  </div>
+</div>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-label">Espace Étudiant</div>
+  <div class="hero-name">{{ etudiant.prenom }} {{ etudiant.nom }}</div>
+  <div class="hero-apogee">Apogée : {{ etudiant.apogee }}</div>
+  <div class="hero-chips">
+    <div class="hero-chip">{{ etudiant.get_niveau_display }}</div>
+    <div class="hero-chip">{{ etudiant.annee.annee_universitaire }}</div>
+    <div class="hero-chip gold">{{ examens_count }} examen{{ examens_count|pluralize }}</div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- Upcoming exams -->
+  <div class="section-title">📅 Planning des examens</div>
+
+  {% if examens %}
+    {% for item in examens %}
+    <div class="exam-card {% if item.is_today %}today{% endif %}">
+      <div class="exam-card-head">
+        <div class="exam-module">{{ item.examen.module }}</div>
+        {% if item.is_today %}<div class="today-badge">AUJOURD'HUI</div>{% endif %}
+      </div>
+
+      <div class="exam-meta">
+        <div class="meta-item">
+          <span class="meta-label">Date</span>
+          <span class="meta-value">{{ item.examen.date|date:"d/m/Y" }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Horaire</span>
+          <span class="meta-value">{{ item.examen.heure_debut|time:"H:i" }} – {{ item.examen.heure_fin|time:"H:i" }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Semestre</span>
+          <span class="meta-value">{{ item.examen.get_semester_display }}</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Session</span>
+          <span class="meta-value">{{ item.examen.session.nom }}</span>
+        </div>
+      </div>
+
+      {% if item.repartition %}
+      <div class="affectation-box">
+        <div class="affectation-left">
+          <span class="aff-label">Salle affectée</span>
+          <span class="aff-amphi">{{ item.repartition.amphi.nom }}</span>
+        </div>
+        {% if item.numero_siege %}
+        <div class="aff-seat">
+          <div class="seat-num">{{ item.numero_siege }}</div>
+          <span class="seat-label">N° de siège</span>
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="notice">
+        ℹ️ L'affectation de salle n'est pas encore disponible pour cet examen.
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="empty">
+      <div class="empty-icon">📭</div>
+      <p>Aucun examen planifié pour le moment.</p>
+    </div>
+  {% endif %}
+
+</div>
+</body>
+</html>

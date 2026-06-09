@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FMPL — Étudiant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#1a5c52;--teal-d:#0f3830;--teal-l:#227a6e;
+  --gold:#c9a84c;--gold-l:#e8c96a;
+  --white:#fff;--off:#f4fbf9;
+  --txt:#1c2e2b;--txt-m:#4a706b;--txt-s:#8fb3ae;
+  --err:#c0392b;--rad:14px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--teal-d);overflow-x:hidden}
+
+.bg{position:fixed;inset:0;z-index:0;
+  background:linear-gradient(150deg,#0f3830 0%,#1a5c52 60%,#0d2e28 100%)}
+.bg::before{content:'';position:absolute;width:480px;height:480px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.12) 0%,transparent 70%);
+  top:-100px;right:-100px}
+.bg::after{content:'';position:absolute;width:320px;height:320px;border-radius:50%;
+  background:radial-gradient(circle,rgba(34,122,110,.4) 0%,transparent 70%);
+  bottom:-60px;left:-60px}
+.grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+  background-size:44px 44px}
+
+.page{position:relative;z-index:1;min-height:100vh;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;padding:24px 16px 48px}
+
+.badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);
+  border-radius:99px;padding:6px 14px;margin-bottom:20px;
+  font-size:11px;font-weight:500;color:var(--gold-l);letter-spacing:.8px;
+  text-transform:uppercase;animation:fadeDown .5s ease both}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);
+  animation:pulse 2s ease infinite}
+
+.header{text-align:center;margin-bottom:28px;animation:fadeDown .6s ease .05s both}
+.icon-wrap{display:inline-flex;align-items:center;justify-content:center;
+  width:60px;height:60px;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.12);border-radius:18px;margin-bottom:14px}
+.icon-wrap svg{width:28px;height:28px}
+.header h1{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;
+  color:var(--white);line-height:1.25;letter-spacing:.3px}
+.header p{font-size:13px;color:var(--txt-s);margin-top:5px;font-weight:300}
+
+.card{width:100%;max-width:400px;background:var(--white);border-radius:22px;
+  padding:30px 26px 26px;box-shadow:0 12px 50px rgba(10,30,28,.4);
+  animation:fadeUp .6s ease .1s both}
+
+.role-strip{display:flex;align-items:center;gap:10px;
+  background:var(--teal-d);border-radius:10px;padding:10px 14px;margin-bottom:24px}
+.role-icon{font-size:20px;line-height:1}
+.role-info{flex:1}
+.role-info strong{display:block;font-family:'Syne',sans-serif;font-size:13px;
+  color:var(--white);font-weight:700;letter-spacing:.3px}
+.role-info span{font-size:11px;color:var(--txt-s)}
+.role-dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0}
+
+.form-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;
+  color:var(--teal-d);margin-bottom:4px}
+.form-sub{font-size:13px;color:var(--txt-m);margin-bottom:22px;font-weight:300}
+
+/* info pill */
+.info-pill{display:flex;align-items:flex-start;gap:10px;
+  background:#f0faf8;border:1px solid #b2ddd7;border-radius:10px;
+  padding:11px 13px;margin-bottom:22px;font-size:12px;color:var(--txt-m);
+  line-height:1.5}
+.info-pill .info-ico{font-size:16px;flex-shrink:0;margin-top:1px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--txt-m);
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
+.inp-wrap{position:relative;display:flex;align-items:center}
+.inp-wrap .ico{position:absolute;left:13px;color:var(--txt-s);
+  pointer-events:none;font-size:15px;line-height:1}
+.inp-wrap input{width:100%;padding:14px 13px 14px 40px;
+  border:1.5px solid #cde8e4;border-radius:var(--rad);
+  font-family:'DM Sans',sans-serif;font-size:16px;color:var(--txt);
+  background:var(--off);outline:none;-webkit-appearance:none;
+  letter-spacing:.5px;
+  transition:border-color .2s,background .2s,box-shadow .2s}
+.inp-wrap input::placeholder{color:var(--txt-s);font-size:14px;letter-spacing:0}
+.inp-wrap input:focus{border-color:var(--teal);background:var(--white);
+  box-shadow:0 0 0 3px rgba(26,92,82,.1)}
+.inp-wrap input.err{border-color:var(--err)}
+
+/* character hint */
+.char-hint{font-size:11px;color:var(--txt-s);margin-top:5px;padding-left:2px}
+
+.err-box{display:none;font-size:12px;color:var(--err);margin-top:16px;
+  padding:10px 13px;background:#fdf0ef;border-radius:9px;
+  border-left:3px solid var(--err);line-height:1.4}
+.err-box.show{display:flex;align-items:center;gap:8px}
+
+.btn{width:100%;padding:14px;background:var(--teal);color:var(--white);border:none;
+  border-radius:var(--rad);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  letter-spacing:.4px;cursor:pointer;margin-top:18px;position:relative;overflow:hidden;
+  transition:background .2s,transform .1s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.btn::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,.18) 0%,transparent 55%);pointer-events:none}
+.btn:hover{background:var(--teal-l);box-shadow:0 4px 22px rgba(26,92,82,.28)}
+.btn:active{transform:scale(.98)}
+.btn.loading{pointer-events:none;opacity:.7}
+.btn .spin{display:none;width:17px;height:17px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+.btn.loading .btn-txt{display:none}
+.btn.loading .spin{display:block}
+
+.surveillant-link{display:block;text-align:center;margin-top:16px;
+  font-size:12px;color:var(--txt-s);text-decoration:none;transition:color .2s}
+.surveillant-link span{color:var(--teal);font-weight:500;text-decoration:underline}
+.surveillant-link:hover span{color:var(--teal-l)}
+
+.footer{margin-top:22px;font-size:11px;color:rgba(255,255,255,.25);
+  text-align:center;animation:fadeUp .6s ease .3s both}
+
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:380px){
+  .card{padding:22px 16px 20px;border-radius:18px}
+  .header h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="bg"><div class="grid"></div></div>
+<div class="page">
+
+  <div class="badge"><span class="badge-dot"></span>Espace Étudiant</div>
+
+  <div class="header">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="9" r="5" fill="#c9a84c" opacity=".85"/>
+        <path d="M4 23c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="#c9a84c"
+              stroke-width="2.2" stroke-linecap="round" opacity=".7"/>
+      </svg>
+    </div>
+    <h1>FMPL Laâyoune</h1>
+    <p>Portail de gestion des examens</p>
+  </div>
+
+  <div class="card">
+    <div class="role-strip">
+      <span class="role-icon">📚</span>
+      <div class="role-info">
+        <strong>ÉTUDIANT</strong>
+        <span>Planning · Affectation · Salle</span>
+      </div>
+      <div class="role-dot"></div>
+    </div>
+
+    <div class="form-title">Accès rapide</div>
+    <div class="form-sub">Entrez votre numéro Apogée pour continuer</div>
+
+    <div class="info-pill">
+      <span class="info-ico">ℹ️</span>
+      <span>Aucun mot de passe requis. Votre numéro Apogée suffit pour accéder à votre planning et votre affectation de salle.</span>
+    </div>
+
+    <form method="post" action="/portal/etudiant/login/" novalidate onsubmit="handleSubmit(this)">
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="apogee">Numéro Apogée</label>
+        <div class="inp-wrap">
+          <span class="ico">🪪</span>
+          <input type="text" id="apogee" name="apogee"
+                 placeholder="Ex : 12345678"
+                 autocomplete="off" autocapitalize="characters"
+                 inputmode="text" maxlength="20"
+                 value="{{ apogee|default:'' }}"
+                 oninput="this.value=this.value.toUpperCase()"
+                 required/>
+        </div>
+        <div class="char-hint">Tel qu'il apparaît sur votre carte d'étudiant</div>
+      </div>
+
+      <div class="err-box {% if error %}show{% endif %}" id="err-box">
+        ⚠️ {{ error|default:"Numéro Apogée introuvable. Vérifiez votre saisie." }}
+      </div>
+
+      <button type="submit" class="btn" id="btn">
+        <span class="btn-txt">Accéder à mon espace →</span>
+        <div class="spin"></div>
+      </button>
+    </form>
+
+    <a href="/portal/surveillant/login/" class="surveillant-link">
+      Vous êtes surveillant ? <span>Connexion sécurisée</span>
+    </a>
+  </div>
+
+  <div class="footer">© 2026 FMPL Laâyoune · Tous droits réservés</div>
+</div>
+
+<script>
+function handleSubmit(form) {
+  const val = document.getElementById('apogee').value.trim();
+  if (!val) return false;
+  document.getElementById('btn').classList.add('loading');
+}
+{% if error %}
+document.getElementById('apogee').classList.add('err');
+{% endif %}
+</script>
+</body>
+</html>

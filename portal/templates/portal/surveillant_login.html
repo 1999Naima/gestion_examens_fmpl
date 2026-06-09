@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FMPL — Surveillant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a3a5c;--navy-d:#0f2238;--navy-l:#254d7a;
+  --gold:#c9a84c;--gold-l:#e8c96a;
+  --white:#fff;--off:#f4f7fb;
+  --txt:#1c2833;--txt-m:#4a607a;--txt-s:#8fa3bb;
+  --err:#c0392b;--rad:14px;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy-d);overflow-x:hidden}
+
+/* bg */
+.bg{position:fixed;inset:0;z-index:0;
+  background:linear-gradient(150deg,#0f2238 0%,#1a3a5c 60%,#0d1e30 100%)}
+.bg::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.13) 0%,transparent 70%);
+  top:-120px;right:-100px}
+.bg::after{content:'';position:absolute;width:350px;height:350px;border-radius:50%;
+  background:radial-gradient(circle,rgba(37,77,122,.3) 0%,transparent 70%);
+  bottom:-60px;left:-80px}
+.grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+  background-size:44px 44px}
+
+/* layout */
+.page{position:relative;z-index:1;min-height:100vh;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;padding:24px 16px 48px}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);
+  border-radius:99px;padding:6px 14px;margin-bottom:20px;
+  font-size:11px;font-weight:500;color:var(--gold-l);letter-spacing:.8px;
+  text-transform:uppercase;animation:fadeDown .5s ease both}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);
+  animation:pulse 2s ease infinite}
+
+/* header */
+.header{text-align:center;margin-bottom:28px;animation:fadeDown .6s ease .05s both}
+.icon-wrap{display:inline-flex;align-items:center;justify-content:center;
+  width:60px;height:60px;background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.12);border-radius:18px;margin-bottom:14px}
+.icon-wrap svg{width:28px;height:28px}
+.header h1{font-family:'Syne',sans-serif;font-size:21px;font-weight:800;
+  color:var(--white);line-height:1.25;letter-spacing:.3px}
+.header p{font-size:13px;color:var(--txt-s);margin-top:5px;font-weight:300}
+
+/* card */
+.card{width:100%;max-width:400px;background:var(--white);border-radius:22px;
+  padding:30px 26px 26px;box-shadow:0 12px 50px rgba(10,20,40,.35);
+  animation:fadeUp .6s ease .1s both}
+
+/* role strip */
+.role-strip{display:flex;align-items:center;gap:10px;
+  background:var(--navy-d);border-radius:10px;padding:10px 14px;margin-bottom:24px}
+.role-icon{font-size:20px;line-height:1}
+.role-info{flex:1}
+.role-info strong{display:block;font-family:'Syne',sans-serif;font-size:13px;
+  color:var(--white);font-weight:700;letter-spacing:.3px}
+.role-info span{font-size:11px;color:var(--txt-s)}
+.role-dot{width:8px;height:8px;border-radius:50%;background:#2ecc71;flex-shrink:0}
+
+/* form */
+.form-title{font-family:'Syne',sans-serif;font-size:19px;font-weight:700;
+  color:var(--navy);margin-bottom:4px}
+.form-sub{font-size:13px;color:var(--txt-m);margin-bottom:22px;font-weight:300}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--txt-m);
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
+.inp-wrap{position:relative;display:flex;align-items:center}
+.inp-wrap .ico{position:absolute;left:13px;color:var(--txt-s);
+  pointer-events:none;font-size:15px;line-height:1}
+.inp-wrap input{width:100%;padding:13px 13px 13px 40px;
+  border:1.5px solid #dce4ee;border-radius:var(--rad);
+  font-family:'DM Sans',sans-serif;font-size:15px;color:var(--txt);
+  background:var(--off);outline:none;-webkit-appearance:none;
+  transition:border-color .2s,background .2s,box-shadow .2s}
+.inp-wrap input::placeholder{color:var(--txt-s);font-size:14px}
+.inp-wrap input:focus{border-color:var(--navy);background:var(--white);
+  box-shadow:0 0 0 3px rgba(26,58,92,.08)}
+.inp-wrap input.err{border-color:var(--err)}
+.toggle{position:absolute;right:12px;background:none;border:none;cursor:pointer;
+  color:var(--txt-s);font-size:15px;padding:4px;transition:color .2s}
+.toggle:hover{color:var(--navy)}
+
+/* error */
+.err-box{display:none;font-size:12px;color:var(--err);margin-top:18px;
+  padding:10px 13px;background:#fdf0ef;border-radius:9px;
+  border-left:3px solid var(--err);line-height:1.4}
+.err-box.show{display:flex;align-items:center;gap:8px}
+
+/* btn */
+.btn{width:100%;padding:14px;background:var(--navy);color:var(--white);border:none;
+  border-radius:var(--rad);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  letter-spacing:.4px;cursor:pointer;margin-top:20px;position:relative;overflow:hidden;
+  transition:background .2s,transform .1s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.btn::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,.2) 0%,transparent 55%);pointer-events:none}
+.btn:hover{background:var(--navy-l);box-shadow:0 4px 22px rgba(26,58,92,.28)}
+.btn:active{transform:scale(.98)}
+.btn.loading{pointer-events:none;opacity:.7}
+.btn .spin{display:none;width:17px;height:17px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+.btn.loading .btn-txt{display:none}
+.btn.loading .spin{display:block}
+
+/* divider + admin */
+.divider{display:flex;align-items:center;gap:10px;margin:20px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#dce4ee}
+.divider span{font-size:11px;color:var(--txt-s);white-space:nowrap}
+.admin-link{display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:11px;border:1.5px solid #dce4ee;border-radius:var(--rad);
+  font-size:12px;color:var(--txt-m);text-decoration:none;
+  transition:border-color .2s,color .2s,background .2s;font-family:'DM Sans',sans-serif}
+.admin-link:hover{border-color:var(--navy);color:var(--navy);background:var(--off)}
+
+.etudiant-link{display:block;text-align:center;margin-top:16px;
+  font-size:12px;color:var(--txt-s);text-decoration:none;
+  transition:color .2s}
+.etudiant-link span{color:var(--navy);font-weight:500;text-decoration:underline}
+.etudiant-link:hover span{color:var(--navy-l)}
+
+/* footer */
+.footer{margin-top:22px;font-size:11px;color:rgba(255,255,255,.25);
+  text-align:center;animation:fadeUp .6s ease .3s both}
+
+/* animations */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:380px){
+  .card{padding:22px 16px 20px;border-radius:18px}
+  .header h1{font-size:19px}
+}
+</style>
+</head>
+<body>
+<div class="bg"><div class="grid"></div></div>
+<div class="page">
+
+  <div class="badge"><span class="badge-dot"></span>Espace Surveillant</div>
+
+  <div class="header">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M14 3L3 8.5v2.5h22V8.5L14 3z" fill="#c9a84c" opacity=".85"/>
+        <rect x="5" y="11" width="3.5" height="10" fill="#c9a84c" opacity=".65"/>
+        <rect x="12.25" y="11" width="3.5" height="10" fill="#c9a84c" opacity=".65"/>
+        <rect x="19.5" y="11" width="3.5" height="10" fill="#c9a84c" opacity=".65"/>
+        <rect x="3" y="21" width="22" height="2.5" rx="1" fill="#c9a84c"/>
+      </svg>
+    </div>
+    <h1>FMPL Laâyoune</h1>
+    <p>Portail de gestion des examens</p>
+  </div>
+
+  <div class="card">
+    <div class="role-strip">
+      <span class="role-icon">🎓</span>
+      <div class="role-info">
+        <strong>SURVEILLANT</strong>
+        <span>Accès sécurisé · Gestion des présences</span>
+      </div>
+      <div class="role-dot"></div>
+    </div>
+
+    <div class="form-title">Connexion</div>
+    <div class="form-sub">Entrez vos identifiants pour continuer</div>
+
+    <form method="post" action="/portal/surveillant/login/" novalidate onsubmit="handleSubmit(this)">
+      {% csrf_token %}
+
+      <div class="field">
+        <label for="username">Nom d'utilisateur</label>
+        <div class="inp-wrap">
+          <span class="ico">👤</span>
+          <input type="text" id="username" name="username"
+                 placeholder="Votre identifiant"
+                 autocomplete="username" autocapitalize="none"
+                 value="{{ username|default:'' }}" required/>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <div class="inp-wrap">
+          <span class="ico">🔒</span>
+          <input type="password" id="password" name="password"
+                 placeholder="••••••••"
+                 autocomplete="current-password" required/>
+          <button type="button" class="toggle" onclick="togglePw()" aria-label="Voir le mot de passe">👁</button>
+        </div>
+      </div>
+
+      <div class="err-box {% if error %}show{% endif %}" id="err-box">
+        ⚠️ {{ error|default:"Identifiant ou mot de passe incorrect." }}
+      </div>
+
+      <button type="submit" class="btn" id="btn">
+        <span class="btn-txt">Se connecter</span>
+        <div class="spin"></div>
+      </button>
+    </form>
+
+    <div class="divider"><span>Administration</span></div>
+    <a href="/admin/" class="admin-link">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      Accès Administration (Jazzmin)
+    </a>
+
+    <a href="/portal/etudiant/login/" class="etudiant-link">
+      Vous êtes étudiant ? <span>Accéder à votre espace</span>
+    </a>
+  </div>
+
+  <div class="footer">© 2026 FMPL Laâyoune · Tous droits réservés</div>
+</div>
+
+<script>
+function togglePw() {
+  const inp = document.getElementById('password');
+  const btn = document.querySelector('.toggle');
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+function handleSubmit(form) {
+  document.getElementById('btn').classList.add('loading');
+}
+ {% if error %}
+document.getElementById('password').classList.add('err');
+document.getElementById('username').classList.add('err');
+  {% endif %}
+</script>
+</body>
+</html>

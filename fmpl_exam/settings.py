@@ -25,11 +25,12 @@ SECRET_KEY = 'django-insecure-i^h@1akvq6728z!@ih4hn$sa$4*-h*9-xjr-$ox)7_oq5*kplt
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.ngrok-free.app', 'paradox-varying-pushiness.ngrok-free.dev']
 
-
+# settings.py
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
-
+CSRF_TRUSTED_ORIGINS = ['https://paradox-varying-pushiness.ngrok-free.dev']
 INSTALLED_APPS = [
     'jazzmin',
     "import_export",
@@ -45,7 +46,10 @@ INSTALLED_APPS = [
     'etudiants',
     'surveillants',
     'salles',
+    'portal',
 ]
+
+LOGIN_URL = '/portal/surveillant/login/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

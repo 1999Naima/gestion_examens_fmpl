@@ -34,7 +34,7 @@ class C:
     GOLD        = HexColor('#c9a84c')
     RED         = HexColor('#b03a2e')
     BG_LIGHT    = HexColor('#f4f6f9')
-    BG_MED      = HexColor('#e8ecf2')
+    BG_MED      = HexColor("#ffffff")
     BORDER      = HexColor('#8fa3bb')
     BORDER_LITE = HexColor('#cdd8e3')
     TXT_DARK    = HexColor('#1c2833')
@@ -498,7 +498,7 @@ class ProcesVerbalPDF:
 
         total, participants, absents, duration = self._stats()
         y = draw_table_with_borders(pdf, margin, y,
-            [135, 95, 90, 80, 75],
+            [135, 95, 90, 80, 100],
             [["EPREUVE", "INSCRITS", "PARTICIPANTS", "ABSENTS", "DUREE"],
              [self.examen.module.upper(), str(total), str(participants), str(absents), duration]],
             row_height=38)

@@ -1,0 +1,411 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard Surveillant — FMPL</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1a3a5c;--navy-d:#0f2238;--navy-l:#254d7a;
+  --gold:#c9a84c;--white:#fff;--off:#f4f7fb;
+  --txt:#1c2833;--txt-m:#4a607a;--txt-s:#8fa3bb;
+  --green:#1a8a5a;--green-l:#e8f7f0;--green-b:#b2ddc8;
+  --red:#c0392b;--red-l:#fdf0ef;
+  --border:#dce4ee;--rad:12px;
+  --shadow:0 4px 24px rgba(26,58,92,.1);
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);color:var(--txt)}
+.topbar{background:var(--navy-d);padding:0 20px;height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+  color:var(--white);letter-spacing:.3px}
+.topbar-logo span{color:var(--gold)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.user-pill{display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.08);border-radius:99px;padding:5px 12px 5px 6px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--navy-d)}
+.user-name{font-size:12px;color:rgba(255,255,255,.8);font-weight:500}
+.logout-btn{font-size:12px;color:var(--txt-s);text-decoration:none;
+  padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.1);
+  transition:all .2s}
+.logout-btn:hover{color:var(--white);border-color:rgba(255,255,255,.25)}
+.page{max-width:700px;margin:0 auto;padding:20px 16px 40px}
+.section-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:var(--txt-m);letter-spacing:.8px;text-transform:uppercase;margin:24px 0 10px}
+.exam-card{background:var(--white);border-radius:16px;padding:18px 18px 14px;
+  box-shadow:var(--shadow);margin-bottom:10px;border:1.5px solid var(--border);
+  cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.exam-card:hover{border-color:var(--navy);box-shadow:0 6px 30px rgba(26,58,92,.14)}
+.exam-card.active{border-color:var(--navy);box-shadow:0 6px 30px rgba(26,58,92,.14)}
+.exam-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.exam-module{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--navy)}
+.exam-amphi{display:inline-flex;align-items:center;gap:5px;
+  background:var(--navy-d);color:var(--white);border-radius:99px;
+  padding:3px 10px;font-size:11px;font-weight:500;white-space:nowrap}
+.exam-meta{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.meta-chip{display:inline-flex;align-items:center;gap:5px;
+  background:var(--off);border-radius:8px;padding:4px 10px;
+  font-size:12px;color:var(--txt-m)}
+.meta-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.empty{text-align:center;padding:40px 20px;color:var(--txt-s)}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty p{font-size:14px}
+.panel{background:var(--white);border-radius:16px;box-shadow:var(--shadow);
+  border:1.5px solid var(--border);overflow:hidden;margin-bottom:16px;display:none}
+.panel.open{display:block}
+.panel-head{background:var(--navy);padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between}
+.panel-head-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--white)}
+.stats-row{display:flex;gap:8px}
+.stat-badge{background:rgba(255,255,255,.12);border-radius:8px;
+  padding:4px 10px;font-size:11px;color:rgba(255,255,255,.85);font-weight:500}
+.stat-badge.green{background:rgba(26,138,90,.3);color:#7ee8b8}
+.stat-badge.red{background:rgba(192,57,43,.3);color:#f1948a}
+.search-wrap{padding:12px 14px;border-bottom:1px solid var(--border);position:relative}
+.search-inp{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--border);
+  border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;
+  background:var(--off);outline:none;transition:border-color .2s}
+.search-inp:focus{border-color:var(--navy)}
+.search-icon{position:absolute;left:26px;top:50%;transform:translateY(-50%);
+  font-size:14px;color:var(--txt-s);pointer-events:none}
+.student-list{max-height:340px;overflow-y:auto}
+.student-row{display:flex;align-items:center;padding:11px 16px;
+  border-bottom:1px solid var(--border);gap:12px;transition:background .15s}
+.student-row:last-child{border-bottom:none}
+.student-row:hover{background:var(--off)}
+.seat{width:32px;height:32px;border-radius:8px;background:var(--off);
+  border:1.5px solid var(--border);display:flex;align-items:center;
+  justify-content:center;font-family:'Syne',sans-serif;font-size:11px;
+  font-weight:700;color:var(--txt-m);flex-shrink:0}
+.student-info{flex:1;min-width:0}
+.student-name{font-size:14px;font-weight:500;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.student-apogee{font-size:11px;color:var(--txt-s);margin-top:1px}
+.presence-btn{padding:5px 12px;border-radius:8px;border:1.5px solid var(--border);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .2s;background:var(--white);color:var(--txt-m);
+  white-space:nowrap;-webkit-tap-highlight-color:transparent}
+.presence-btn.present{background:var(--green-l);border-color:var(--green-b);color:var(--green)}
+.presence-btn.absent{background:var(--red-l);border-color:#f1948a;color:var(--red)}
+.scanner-card{background:var(--white);border-radius:16px;box-shadow:var(--shadow);
+  border:1.5px solid var(--border);overflow:hidden;margin-bottom:16px}
+.scanner-head{background:var(--navy-d);padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between}
+.scanner-head-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--white)}
+.scanner-toggle{padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2);
+  background:transparent;color:var(--white);font-family:'DM Sans',sans-serif;
+  font-size:12px;cursor:pointer;transition:background .2s}
+.scanner-toggle:hover{background:rgba(255,255,255,.1)}
+.scanner-toggle.active{background:var(--green);border-color:var(--green)}
+.scanner-body{padding:16px;display:none}
+.scanner-body.open{display:block}
+#qr-reader{border-radius:10px;overflow:hidden;max-width:100%}
+#qr-reader video{border-radius:10px}
+.scan-result{margin-top:12px;padding:12px 14px;border-radius:10px;
+  font-size:13px;font-weight:500;line-height:1.4;word-break:break-all;display:none}
+.scan-result.success{background:var(--green-l);border:1px solid var(--green-b);
+  color:var(--green);display:block}
+.scan-result.error{background:var(--red-l);border:1px solid #f1948a;
+  color:var(--red);display:block}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--navy-d);color:var(--white);padding:12px 20px;border-radius:12px;
+  font-size:13px;font-weight:500;z-index:999;transition:transform .3s ease;
+  white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.green{background:var(--green)}
+.toast.red{background:var(--red)}
+@media(max-width:480px){
+  .exam-card-top{flex-direction:column;gap:6px}
+  .panel-head{flex-direction:column;align-items:flex-start;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">FMP<span>L</span></div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-pill">
+      <div class="user-avatar">{{ user.username|first|upper }}</div>
+      <span class="user-name">{{ user.username }}</span>
+    </div>
+    <a href="/portal/surveillant/logout/" class="logout-btn">Déconnexion</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="section-title">📷 Scanner QR</div>
+  <div class="scanner-card">
+    <div class="scanner-head">
+      <span class="scanner-head-title">Scanner le QR code du siège</span>
+      <button class="scanner-toggle" id="scanner-toggle-btn" onclick="toggleScanner()">
+        Activer le scanner
+      </button>
+    </div>
+    <div class="scanner-body" id="scanner-body">
+      <div id="qr-reader"></div>
+      <div class="scan-result" id="scan-result"></div>
+    </div>
+  </div>
+
+  <div class="section-title">📋 Mes examens du jour</div>
+
+  {% if repartitions %}
+    {% for rep in repartitions %}
+    <div class="exam-card" onclick="togglePanel('panel-{{ rep.id }}', this)">
+      <div class="exam-card-top">
+        <div class="exam-module">{{ rep.examen.module }}</div>
+        <div class="exam-amphi">🏛 {{ rep.amphi.nom }}</div>
+      </div>
+      <div class="exam-meta">
+        <div class="meta-chip"><span class="dot"></span>{{ rep.examen.date }}</div>
+        <div class="meta-chip">🕐 {{ rep.examen.heure_debut }} – {{ rep.examen.heure_fin }}</div>
+        <div class="meta-chip">👥 {{ rep.etudiants.count }} étudiants</div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-{{ rep.id }}">
+      <div class="panel-head">
+        <span class="panel-head-title">Liste des étudiants — {{ rep.amphi.nom }}</span>
+        <div class="stats-row">
+          <span class="stat-badge green" id="present-count-{{ rep.id }}">✓ 0 présents</span>
+          <span class="stat-badge red"   id="absent-count-{{ rep.id }}">✗ {{ rep.etudiants.count }} absents</span>
+        </div>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-inp" type="search" placeholder="Rechercher un étudiant..."
+               oninput="filterStudents(this, 'list-{{ rep.id }}')"/>
+      </div>
+      <div class="student-list" id="list-{{ rep.id }}">
+        {% for etudiant in rep.etudiants.all %}
+        <div class="student-row" id="row-{{ rep.id }}-{{ etudiant.id }}"
+             data-name="{{ etudiant.nom }} {{ etudiant.prenom }}"
+             data-apogee="{{ etudiant.apogee }}">
+          <div class="seat">{{ forloop.counter }}</div>
+          <div class="student-info">
+            <div class="student-name">{{ etudiant.nom }} {{ etudiant.prenom }}</div>
+            <div class="student-apogee">Apogée : {{ etudiant.apogee }}</div>
+          </div>
+          {% with rep_id=rep.id et_id=etudiant.id %}
+          <button class="presence-btn {% if presences_json %}{% endif %}"
+                  id="btn-{{ rep.id }}-{{ etudiant.id }}"
+                  onclick="togglePresence({{ rep.id }}, {{ etudiant.id }}, this)">
+            Marquer
+          </button>
+          {% endwith %}
+
+          
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="empty">
+      <div class="empty-icon">📭</div>
+      <p>Aucun examen assigné pour aujourd'hui.</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+  // Initialise les boutons selon l'état en base au chargement
+          document.addEventListener('DOMContentLoaded', function() {
+            const state = {{ presences_json|safe }};
+            for (const repId in state) {
+              for (const etudiantId in state[repId]) {
+                const present = state[repId][etudiantId];
+                const btn = document.getElementById(`btn-${repId}-${etudiantId}`);
+                if (btn) {
+                  btn.textContent = present ? '✓ Présent' : '✗ Absent';
+                  btn.className   = 'presence-btn ' + (present ? 'present' : 'absent');
+                }
+              }
+              updateCounts(parseInt(repId));
+            }
+          });
+// ── Panel toggle ──────────────────────────────────────────────────
+function togglePanel(panelId, card) {
+  const panel = document.getElementById(panelId);
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.exam-card').forEach(c => c.classList.remove('active'));
+  if (!isOpen) {
+    panel.classList.add('open');
+    card.classList.add('active');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ── Search ────────────────────────────────────────────────────────
+function filterStudents(input, listId) {
+  const q = input.value.toLowerCase();
+  document.querySelectorAll(`#${listId} .student-row`).forEach(row => {
+    const match = row.dataset.name.toLowerCase().includes(q) ||
+                  row.dataset.apogee.toLowerCase().includes(q);
+    row.style.display = match ? '' : 'none';
+  });
+}
+
+// ── Presence toggle ───────────────────────────────────────────────
+const presenceState = {{ presences_json|safe }};
+
+async function togglePresence(repId, etudiantId, btn) {
+  const key = `${repId}-${etudiantId}`;
+  const newState = !presenceState[key];
+  try {
+    const resp = await fetch('/portal/surveillant/presence/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ repartition_id: repId, etudiant_id: etudiantId, present: newState }),
+    });
+    if (resp.ok) {
+      presenceState[key] = newState;
+      btn.textContent = newState ? '✓ Présent' : '✗ Absent';
+      btn.className = 'presence-btn ' + (newState ? 'present' : 'absent');
+      updateCounts(repId);
+      showToast(newState ? '✓ Présence enregistrée' : '✗ Marqué absent', newState ? 'green' : 'red');
+    }
+  } catch(e) {
+    showToast('Erreur réseau', 'red');
+  }
+}
+
+function updateCounts(repId) {
+  const list = document.getElementById(`list-${repId}`);
+  const rows = list.querySelectorAll('.student-row');
+  let presents = 0;
+  rows.forEach(row => {
+    if (row.querySelector('.presence-btn').classList.contains('present')) presents++;
+  });
+  document.getElementById(`present-count-${repId}`).textContent = `✓ ${presents} présents`;
+  document.getElementById(`absent-count-${repId}`).textContent  = `✗ ${rows.length - presents} absents`;
+}
+
+// ── QR Scanner ────────────────────────────────────────────────────
+let html5QrCode = null;
+let scannerOpen = false;
+
+function toggleScanner() {
+  const btn  = document.getElementById('scanner-toggle-btn');
+  const body = document.getElementById('scanner-body');
+
+  if (!scannerOpen) {
+    body.classList.add('open');
+    btn.textContent = 'Désactiver';
+    btn.classList.add('active');
+    scannerOpen = true;
+    html5QrCode = new Html5Qrcode("qr-reader");
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      onQrSuccess,
+      () => {}
+    ).catch(() => showScanResult("Impossible d'accéder à la caméra.", false));
+  } else {
+    if (html5QrCode) html5QrCode.stop().catch(() => {});
+    body.classList.remove('open');
+    btn.textContent = 'Activer le scanner';
+    btn.classList.remove('active');
+    scannerOpen = false;
+  }
+}
+
+async function onQrSuccess(decodedText) {
+  // Step 1 — show raw QR content
+  showScanResult('QR lu : [' + decodedText + ']', true);
+
+  // Step 2 — parse
+  const match = decodedText.match(/Amphi:\s*(.+?)\s*\|\s*Seat:\s*(\d+)/i);
+  if (!match) {
+    showScanResult('❌ Format invalide : [' + decodedText + ']', false);
+    return;
+  }
+
+  const seatNumber = parseInt(match[2]);
+  showScanResult('✅ Siège ' + seatNumber + ' détecté — envoi au serveur...', true);
+
+  if (html5QrCode) html5QrCode.pause();
+
+  try {
+    const resp = await fetch('/portal/surveillant/scan-seat/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ seat_number: seatNumber }),
+    });
+
+    // Read as text first to catch any Django error page
+    const text = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      showScanResult('❌ Réponse non-JSON du serveur : ' + text.substring(0, 200), false);
+      setTimeout(() => { if (html5QrCode && scannerOpen) html5QrCode.resume(); }, 5000);
+      return;
+    }
+
+    if (resp.ok && data.ok) {
+      showScanResult('✓ ' + data.nom + ' — Siège ' + seatNumber + ' — Présence enregistrée ✅', true);
+      showToast('✓ ' + data.nom + ' présent', 'green');
+      // Update button in list if panel is open
+      const btn = document.getElementById(`btn-${data.rep_id}-${data.etudiant_id}`);
+      if (btn) {
+        presenceState[`${data.rep_id}-${data.etudiant_id}`] = true;
+        btn.textContent = '✓ Présent';
+        btn.className   = 'presence-btn present';
+        updateCounts(data.rep_id);
+      }
+    } else {
+      showScanResult('❌ ' + (data.error || 'Erreur inconnue'), false);
+    }
+
+  } catch(e) {
+    showScanResult('❌ Erreur réseau : ' + e.message, false);
+  }
+
+  setTimeout(() => { if (html5QrCode && scannerOpen) html5QrCode.resume(); }, 5000);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+function showScanResult(msg, success) {
+  const el = document.getElementById('scan-result');
+  el.textContent = msg;
+  el.className = 'scan-result ' + (success ? 'success' : 'error');
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function getCookie(name) {
+  let v = null;
+  document.cookie.split(';').forEach(c => {
+    const [k, val] = c.trim().split('=');
+    if (k === name) v = decodeURIComponent(val);
+  });
+  return v;
+}
+</script>
+</body>
+</html>

@@ -100,3 +100,19 @@ class Repartition(models.Model):
     
     def __str__(self):
         return f"{self.examen} - {self.amphi}"
+    
+
+
+from salles.models import Seat
+
+class RepartitionSeat(models.Model):
+    repartition = models.ForeignKey(Repartition, on_delete=models.CASCADE, related_name='seat_assignments')
+    etudiant    = models.ForeignKey('etudiants.Etudiant', on_delete=models.CASCADE)
+    seat        = models.ForeignKey(Seat, on_delete=models.CASCADE)
+    numero      = models.IntegerField()  # numéro d'ordre dans la salle
+
+    class Meta:
+        unique_together = [('repartition', 'seat'), ('repartition', 'etudiant')]
+
+    def __str__(self):
+        return f"N°{self.numero} — {self.etudiant} → {self.seat}"
