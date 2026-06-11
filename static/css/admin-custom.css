@@ -1,0 +1,60 @@
+/* ── Login page background ── */
+body.login {
+  background: linear-gradient(145deg, #0f2238 0%, #1a3a5c 55%, #0d1e30 100%) !important;
+  min-height: 100vh;
+}
+
+.login-box {
+  background: #ffffff !important;
+  border-radius: 22px !important;
+  box-shadow: 0 12px 50px rgba(10,20,40,.4) !important;
+}
+
+.login-box-body {
+  background: transparent !important;
+}
+
+/* Fields */
+.login-box .form-control {
+  border: 1.5px solid #dce4ee !important;
+  border-radius: 12px !important;
+  background: #f4f7fb !important;
+}
+
+.login-box .form-control:focus {
+  border-color: #1a3a5c !important;
+  box-shadow: 0 0 0 3px rgba(26,58,92,.08) !important;
+}
+
+/* Button */
+.login-box .btn-primary {
+  background: #1a3a5c !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: .4px !important;
+}
+
+.login-box .btn-primary:hover {
+  background: #254d7a !important;
+  box-shadow: 0 4px 22px rgba(26,58,92,.28) !important;
+}
+
+/* Logo area */
+.login-logo {
+  padding: 20px 0 10px !important;
+}
+
+.login-logo img {
+  max-height: 80px !important;
+  width: auto !important;
+}
+
+/* Title under logo */
+.login-logo p {
+  font-family: 'Syne', sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #1a3a5c !important;
+  margin-top: 10px !important;
+}

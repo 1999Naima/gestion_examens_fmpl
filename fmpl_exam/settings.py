@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'portal',
 ]
 
-LOGIN_URL = '/portal/surveillant/login/'
+LOGIN_URL = '/admin/login/'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -144,13 +145,30 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenue - Gestion des Examens",
 
     "copyright": "Faculté de Médecine et Pharmacie Laayoune",
-
+      # Custom CSS for login page
+    "custom_css": "css/admin-custom.css",
+    
+    # Login form customization
+    "login_logo": "images/logo.png",  # Logo on login page
+    # Hide Jazzmin branding
+    "show_ui_builder": False,
+    
      "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index"},
         {"name": "Calendrier des Examens", "url": "/examens/calendrier/"},
          {"name":"Convocation", "url": "/examens/convocations/"},
-    ],
+    ], 
 
+    # Custom icons
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+    },
+    
+    # Theme customization
+    "theme": "flatly",  # or "darkly", "flatly", "simplex", etc.
+    "dark_mode_theme": "darkly",
 }
 
 # settings.py
@@ -158,4 +176,18 @@ import os
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ── Email (Gmail SMTP) ────────────────────────────────────────────
+EMAIL_BACKEND    = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST       = 'smtp.gmail.com'
+EMAIL_PORT       = 587
+EMAIL_USE_TLS    = True
+EMAIL_HOST_USER  = 'aitider99@gmail.com'       # ← ton Gmail
+EMAIL_HOST_PASSWORD = 'vxtx wddq qeto tpqd'    # ← App Password Gmail (pas ton vrai mot de passe)
+DEFAULT_FROM_EMAIL = 'FMPL Laâyoune <aitider99@gmail.com>'
+
+# ── WhatsApp (Twilio) ─────────────────────────────────────────────
+TWILIO_ACCOUNT_SID  = 'ACf6388eec7251167d91d350d469a85466'  # ← depuis dashboard Twilio
+TWILIO_AUTH_TOKEN   = '3f85b47b7895066494a6d83ecdd269ca'
+TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886'  # numéro sandbox Twilio
 

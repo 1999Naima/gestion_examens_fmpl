@@ -1,7 +1,7 @@
 from collections import defaultdict
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from etudiants.models import Etudiant
 from .models import Examen, Repartition, Session
@@ -17,6 +17,9 @@ from django.db.models import Count, Q
 from surveillants.models import Surveillant
 import os
 from django.conf import settings
+from django.core.mail import EmailMessage
+from io import BytesIO
+from django.conf import settings as django_settings
 
 def calendrier_examens(request):
     # Get filters from request
@@ -936,3 +939,336 @@ def generate_proces_verbal(request, repartition_id):
     
     pdf_generator = ProcesVerbalPDF(repartition)
     return pdf_generator.generate(response)
+
+
+def _get_convocation_pdf_bytes(surveillant, session_id=None):
+    """
+    Génère le PDF de convocation et retourne les bytes bruts.
+    Réutilise exactement la même logique que generate_convocation_pdf.
+    """
+    import os
+    from io import BytesIO
+    from django.conf import settings
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer,
+        Table, TableStyle, Image
+    )
+
+    from examens.models import Repartition, Session
+    from django.shortcuts import get_object_or_404
+
+    # ── Répartitions ──────────────────────────────────────────────
+    repartitions = Repartition.objects.filter(surveillants=surveillant)
+
+    session_name = None
+    if session_id:
+        repartitions = repartitions.filter(examen__session_id=session_id)
+        session = get_object_or_404(Session, pk=session_id)
+        session_name = session.nom
+    else:
+        latest = repartitions.order_by('examen__session__date_debut').first()
+        if latest:
+            session_name = latest.examen.session.nom
+
+    repartitions = repartitions.order_by('examen__date', 'examen__heure_debut')
+
+    # ── Document ──────────────────────────────────────────────────
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=A4,
+        topMargin=2*cm, bottomMargin=2*cm,
+        leftMargin=2*cm, rightMargin=2*cm
+    )
+
+    # ── Styles ────────────────────────────────────────────────────
+    styles = getSampleStyleSheet()
+
+    title_style = ParagraphStyle(
+        'TitleStyle', parent=styles['Heading1'],
+        fontSize=16, alignment=TA_CENTER, spaceAfter=5,
+        textColor=colors.HexColor("#081B35"), fontName='Helvetica-Bold'
+    )
+    subtitle_style = ParagraphStyle(
+        'SubtitleStyle', parent=styles['Heading1'],
+        fontSize=16, alignment=TA_CENTER, spaceAfter=10,
+        textColor=colors.HexColor("#081B35"), fontName='Helvetica-Bold'
+    )
+    attention_style = ParagraphStyle(
+        'AttentionStyle', parent=styles['Normal'],
+        fontSize=11, alignment=TA_CENTER, spaceAfter=15,
+        fontName='Helvetica-Bold'
+    )
+    body_style = ParagraphStyle(
+        'BodyStyle', parent=styles['Normal'],
+        fontSize=10, alignment=TA_JUSTIFY,
+        spaceAfter=15, leading=14
+    )
+
+    # ── Story ─────────────────────────────────────────────────────
+    story = []
+
+    # Logo
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'logo.png')
+    if os.path.exists(logo_path):
+        try:
+            logo = Image(logo_path, width=8*cm, height=2*cm)
+            logo.hAlign = 'CENTER'
+            story.append(logo)
+            story.append(Spacer(1, 20))
+        except Exception:
+            pass
+
+    # Titre
+    story.append(Paragraph("CONVOCATION À LA SURVEILLANCE DES EXAMENS", title_style))
+
+    # Session
+    if session_name:
+        story.append(Paragraph(f"SESSION {session_name.upper()}", subtitle_style))
+    else:
+        story.append(Paragraph("SESSION EN COURS", subtitle_style))
+
+    story.append(Spacer(1, 10))
+
+    # Attention
+    story.append(Paragraph(
+        f"<b>A l'attention de :</b> {surveillant.specialite.upper()} {surveillant.nom.upper()}",
+        attention_style
+    ))
+
+    story.append(Spacer(1, 5))
+
+    # Corps
+    story.append(Paragraph(
+        """La doyenne de la Faculté de Médecine de Pharmacie Laâyoune, vous informe que vous avez été désigné(e)
+        pour assurer la surveillance lors des prochains examens qui auront lieu dans notre faculté.""",
+        body_style
+    ))
+
+    story.append(Paragraph(
+        "<b>Vous trouverez ci-dessous les détails de la surveillance :</b>",
+        body_style
+    ))
+    story.append(Spacer(1, 10))
+
+    # Tableau des examens
+    if repartitions.exists():
+        table_data = [["Date et heure d'examen", "Matière", "Amphi / Salle"]]
+        for rep in repartitions:
+            exam = rep.examen
+            date_time = (
+                f"{exam.date.strftime('%d/%m/%Y')} – "
+                f"{exam.heure_debut.strftime('%H:%M')} – "
+                f"{exam.heure_fin.strftime('%H:%M')}"
+            )
+            table_data.append([date_time, exam.module, rep.amphi.nom])
+
+        exam_table = Table(table_data, colWidths=[4.5*cm, 6.5*cm, 4*cm], repeatRows=1)
+        exam_table.setStyle(TableStyle([
+            ('BACKGROUND',    (0, 0), (-1, 0),  colors.HexColor("#10327c")),
+            ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.white),
+            ('ALIGN',         (0, 0), (-1, 0),  'CENTER'),
+            ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+            ('FONTSIZE',      (0, 0), (-1, 0),  9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0),  8),
+            ('TOPPADDING',    (0, 0), (-1, 0),  8),
+            ('FONTSIZE',      (0, 1), (-1, -1), 8),
+            ('ALIGN',         (0, 1), (0,  -1), 'CENTER'),
+            ('VALIGN',        (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID',          (0, 0), (-1, -1), 0.5, colors.HexColor('#cccccc')),
+            ('TOPPADDING',    (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('LEFTPADDING',   (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING',  (0, 0), (-1, -1), 5),
+        ]))
+        story.append(exam_table)
+        story.append(Spacer(1, 15))
+
+    # Note force majeure
+    story.append(Paragraph(
+        """<i>Si pour une raison de force majeure vous vous trouviez dans l'impossibilité d'assurer cette mission,
+        il vous appartiendrait d'en aviser immédiatement par téléphone l'administration de la faculté.</i>""",
+        body_style
+    ))
+
+    story.append(Spacer(1, 15))
+
+    # Remerciement
+    story.append(Paragraph(
+        "<b>Nous tenons à vous remercier d'avance pour votre collaboration.</b>",
+        body_style
+    ))
+
+    story.append(Spacer(1, 25))
+
+    # Cachet
+    cache_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'Cache.png')
+    if os.path.exists(cache_path):
+        try:
+            cache = Image(cache_path, width=5*cm, height=5*cm)
+            cache.hAlign = 'CENTER'
+            story.append(cache)
+            story.append(Spacer(1, 10))
+        except Exception:
+            pass
+
+    # ── Build ─────────────────────────────────────────────────────
+    doc.build(story)
+    pdf_bytes = buffer.getvalue()
+    buffer.close()
+    return pdf_bytes
+
+
+@staff_member_required  
+def send_convocation_email(request, surveillant_id, session_id=None):
+    """Envoie la convocation par email."""
+    from surveillants.models import Surveillant
+    from django.contrib import messages
+
+    surveillant = get_object_or_404(Surveillant, pk=surveillant_id)
+
+    if not surveillant.email:
+        messages.error(request, f"❌ {surveillant.nom} n'a pas d'adresse email.")
+        return redirect('examens:convocations_list')
+
+    try:
+        pdf_bytes = _get_convocation_pdf_bytes(surveillant, session_id)
+
+        mail = EmailMessage(
+            subject=f'Convocation à la surveillance des examens — FMPL Laâyoune',
+            body=f"""Madame/Monsieur {surveillant.nom},
+
+Veuillez trouver ci-joint votre convocation pour la surveillance des examens.
+
+Cordialement,
+Administration FMPL Laâyoune""",
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            to=[surveillant.email],
+        )
+        mail.attach(
+            f'convocation_{surveillant.nom}.pdf',
+            pdf_bytes,
+            'application/pdf'
+        )
+        mail.send()
+        messages.success(request, f"✅ Email envoyé à {surveillant.nom} ({surveillant.email})")
+
+    except Exception as e:
+        messages.error(request, f"❌ Erreur envoi email : {str(e)}")
+
+    return redirect('examens:convocations_list')
+
+
+
+@staff_member_required
+def send_convocation_whatsapp(request, surveillant_id, session_id=None):
+    """Envoie un message WhatsApp via Twilio."""
+    from surveillants.models import Surveillant
+    from django.contrib import messages
+    from twilio.rest import Client
+
+    surveillant = get_object_or_404(Surveillant, pk=surveillant_id)
+
+    if not surveillant.telephone:
+        messages.error(request, f"❌ {surveillant.nom} n'a pas de numéro de téléphone.")
+        return redirect('examens:convocations_list')
+
+    try:
+        # Formate le numéro — ajoute +212 si numéro marocain local
+        phone = surveillant.telephone.strip().replace(' ', '')
+        if phone.startswith('0'):
+            phone = '+212' + phone[1:]
+        elif not phone.startswith('+'):
+            phone = '+212' + phone
+
+        # Récupère les examens pour le message
+        repartitions = Repartition.objects.filter(surveillants=surveillant)
+        if session_id:
+            repartitions = repartitions.filter(examen__session_id=session_id)
+        repartitions = repartitions.order_by('examen__date', 'examen__heure_debut')
+
+        lines = ['📋 *Convocation FMPL Laâyoune*\n']
+        lines.append(f'Madame/Monsieur *{surveillant.nom}*,\n')
+        lines.append('Vous êtes convoqué(e) pour surveiller les examens suivants :\n')
+        for rep in repartitions:
+            e = rep.examen
+            lines.append(
+                f'📅 {e.date.strftime("%d/%m/%Y")} | '
+                f'🕐 {e.heure_debut.strftime("%H:%M")}–{e.heure_fin.strftime("%H:%M")} | '
+                f'📚 {e.module} | 🏛 {rep.amphi.nom}'
+            )
+        lines.append('\nMerci pour votre collaboration.\n_Administration FMPL Laâyoune_')
+
+        message_body = '\n'.join(lines)
+
+        client = Client(
+            django_settings.TWILIO_ACCOUNT_SID,
+            django_settings.TWILIO_AUTH_TOKEN
+        )
+        client.messages.create(
+            from_=django_settings.TWILIO_WHATSAPP_FROM,
+            to=f'whatsapp:{phone}',
+            body=message_body,
+        )
+        messages.success(request, f"✅ WhatsApp envoyé à {surveillant.nom} ({phone})")
+
+    except Exception as e:
+        messages.error(request, f"❌ Erreur WhatsApp : {str(e)}")
+
+    return redirect('examens:convocations_list')
+
+
+@staff_member_required
+def send_bulk_notifications(request):
+    """Envoie email + WhatsApp à tous les surveillants sélectionnés."""
+    from surveillants.models import Surveillant
+    from django.contrib import messages
+
+    ids        = request.GET.get('ids', '').split(',')
+    session_id = request.GET.get('session')
+    channel    = request.GET.get('channel', 'email')  # 'email' ou 'whatsapp'
+
+    sent, failed = 0, 0
+    for sid in ids:
+        if not sid.strip():
+            continue
+        try:
+            surveillant = Surveillant.objects.get(pk=int(sid))
+            if channel == 'whatsapp':
+                # appelle la logique whatsapp directement
+                _send_whatsapp(surveillant, session_id)
+            else:
+                _send_email(surveillant, session_id)
+            sent += 1
+        except Exception as e:
+            failed += 1
+
+    messages.success(request, f"✅ {sent} envoi(s) réussi(s){f', {failed} échec(s)' if failed else ''}.")
+    return redirect('examens:convocations_list')
+
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import JsonResponse
+
+@staff_member_required
+def dashboard_stats(request):
+    from etudiants.models import Etudiant
+    from examens.models import Examen, Repartition
+    from surveillants.models import Surveillant
+    from salles.models import Amphi
+    from portal.models import Presence
+
+    return JsonResponse({
+        'etudiants':    Etudiant.objects.count(),
+        'examens':      Examen.objects.count(),
+        'surveillants': Surveillant.objects.count(),
+        'repartitions': Repartition.objects.count(),
+        'presences':    Presence.objects.count(),
+        'salles':       Amphi.objects.count(),
+    })
