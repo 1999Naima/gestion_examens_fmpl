@@ -423,60 +423,36 @@ def generate_multiple_presence_pdf(request):
 
 
 # examens/views.py - Ajoutez ces fonctions
+from django.contrib import admin   # ← ajoute cet import en haut du fichier
 
 @staff_member_required
-def convocations_list(request):
-    """Liste des convocations des surveillants avec filtres"""
-    from surveillants.models import Surveillant
-    
-    # Get filter parameters
+def convocations_view(request):
+    """View to display convocations for surveillants"""
+    sessions = Session.objects.filter(is_active=True).order_by('-date_debut')
+    selected_session = None
     session_id = request.GET.get('session')
     
-    # Get all sessions for filter dropdown
-    sessions = Session.objects.filter(is_active=True).order_by('-date_debut')
-    
-    # Get all surveillant IDs that have repartitions
     if session_id:
-        selected_session = Session.objects.get(id=session_id)
-        # Get repartitions for this session
-        repartitions = Repartition.objects.filter(examen__session_id=session_id)
-        surveillant_ids = set()
-        for rep in repartitions:
-            for surv in rep.surveillants.all():
-                surveillant_ids.add(surv.id)
-        surveillant_ids = list(surveillant_ids)
+        selected_session = get_object_or_404(Session, id=session_id)
+        surveillants = Surveillant.objects.filter(
+            repartition__examen__session=selected_session
+        ).distinct().annotate(
+            examens_count=Count('repartition__examen', distinct=True)
+        )
     else:
-        selected_session = None
-        # Get all repartitions
-        repartitions = Repartition.objects.all()
-        surveillant_ids = set()
-        for rep in repartitions:
-            for surv in rep.surveillants.all():
-                surveillant_ids.add(surv.id)
-        surveillant_ids = list(surveillant_ids)
-    
-    # Get surveillants
-    surveillants = Surveillant.objects.filter(id__in=surveillant_ids).order_by('nom')
-    
-    # Add examens_count to each surveillant
-    for surveillant in surveillants:
-        if session_id:
-            count = Repartition.objects.filter(
-                surveillants=surveillant,
-                examen__session_id=session_id
-            ).count()
-        else:
-            count = Repartition.objects.filter(surveillants=surveillant).count()
-        surveillant.examens_count = count
+        surveillants = Surveillant.objects.annotate(
+            examens_count=Count('repartition__examen', distinct=True)
+        ).filter(examens_count__gt=0)
     
     context = {
+        **admin.site.each_context(request),  # ← LA correction : injecte available_apps, app_list, etc.
         'sessions': sessions,
-        'surveillants': surveillants,
         'selected_session': selected_session,
         'session_id': session_id,
+        'surveillants': surveillants,
+        'title': 'Convocations des Surveillants',
     }
-    
-    return render(request, 'examens/convocations_list.html', context)
+    return render(request, 'admin/examens/convocations.html', context)
 
 @staff_member_required
 def generate_convocation_pdf(request, surveillant_id, session_id=None):
@@ -1263,6 +1239,21 @@ def dashboard_stats(request):
     from surveillants.models import Surveillant
     from salles.models import Amphi
     from portal.models import Presence
+    from django.contrib.admin.models import LogEntry
+
+    # Actions récentes
+    log_entries = []
+    for entry in LogEntry.objects.select_related('content_type', 'user').order_by('-action_time')[:10]:
+        log_entries.append({
+            'object_repr': entry.object_repr,
+            'app':         entry.content_type.app_label,
+            'model':       entry.content_type.model,
+            'action':      'Ajout' if entry.is_addition() else 'Modification' if entry.is_change() else 'Suppression',
+            'action_type': 'add' if entry.is_addition() else 'change' if entry.is_change() else 'delete',
+            'user':        entry.user.username,
+            'time':        entry.action_time.strftime('%d/%m/%Y %H:%M'),
+            'url':         f'/admin/{entry.content_type.app_label}/{entry.content_type.model}/{entry.object_id}/change/',
+        })
 
     return JsonResponse({
         'etudiants':    Etudiant.objects.count(),
@@ -1271,4 +1262,6 @@ def dashboard_stats(request):
         'repartitions': Repartition.objects.count(),
         'presences':    Presence.objects.count(),
         'salles':       Amphi.objects.count(),
+        'log_entries':  log_entries,
     })
+    

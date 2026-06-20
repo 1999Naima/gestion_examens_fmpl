@@ -4,6 +4,7 @@
 {% block extrastyle %}
 {{ block.super }}
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
 <style>
 :root{
   --navy:#1a3a5c;--navy-d:#0f2238;--navy-l:#254d7a;
@@ -17,233 +18,128 @@
   --border:#dce4ee;--rad:14px;
   --shadow:0 4px 24px rgba(26,58,92,.08);
 }
-
-/* ── Page ── */
-#content {
-  background: var(--off) !important;
-  padding: 24px !important;
-  font-family: 'DM Sans', sans-serif !important;
+#content{
+  background:var(--off) !important;
+  padding:24px !important;
+  font-family:'DM Sans',sans-serif !important;
 }
-
-/* ── Welcome banner ── */
-.dashboard-hero {
-  background: linear-gradient(135deg, var(--navy-d) 0%, var(--navy) 60%, var(--navy-l) 100%);
-  border-radius: 20px;
-  padding: 28px 32px;
-  margin-bottom: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  overflow: hidden;
+.dashboard-hero{
+  background:linear-gradient(135deg,var(--navy-d) 0%,var(--navy) 60%,var(--navy-l) 100%);
+  border-radius:20px;padding:28px 32px;margin-bottom:28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;overflow:hidden;
 }
-.dashboard-hero::before {
-  content: '';
-  position: absolute;
-  width: 300px; height: 300px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,.15) 0%, transparent 70%);
-  top: -80px; right: -60px;
-  pointer-events: none;
+.dashboard-hero::before{
+  content:'';position:absolute;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 70%);
+  top:-80px;right:-60px;pointer-events:none;
 }
-.dashboard-hero::after {
-  content: '';
-  position: absolute;
-  inset: 0;
+.dashboard-hero::after{
+  content:'';position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(201,168,76,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(201,168,76,.04) 1px, transparent 1px);
-  background-size: 32px 32px;
-  pointer-events: none;
+    linear-gradient(rgba(201,168,76,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(201,168,76,.04) 1px,transparent 1px);
+  background-size:32px 32px;pointer-events:none;
 }
-.hero-left { position: relative; z-index: 1; }
-.hero-label {
-  font-size: 11px; color: rgba(255,255,255,.5);
-  letter-spacing: .8px; text-transform: uppercase; margin-bottom: 6px;
+.hero-left{position:relative;z-index:1;}
+.hero-label{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;}
+.hero-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:6px;}
+.hero-title span{color:var(--gold);}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.55);font-weight:300;}
+.hero-right{position:relative;z-index:1;display:flex;gap:12px;}
+.hero-badge{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;padding:12px 18px;text-align:center;min-width:80px;
 }
-.hero-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 26px; font-weight: 800;
-  color: #fff; line-height: 1.2; margin-bottom: 6px;
+.hero-badge-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold);display:block;}
+.hero-badge-lbl{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.5px;text-transform:uppercase;}
+.dash-section-title{
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  color:var(--txt-s);letter-spacing:.8px;text-transform:uppercase;margin:24px 0 12px;
 }
-.hero-title span { color: var(--gold); }
-.hero-sub { font-size: 13px; color: rgba(255,255,255,.55); font-weight: 300; }
-.hero-right {
-  position: relative; z-index: 1;
-  display: flex; gap: 12px;
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:14px;margin-bottom:8px;
 }
-.hero-badge {
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.15);
-  border-radius: 12px; padding: 12px 18px;
-  text-align: center; min-width: 80px;
+.stat-card{
+  background:var(--white);border-radius:var(--rad);padding:18px 20px;
+  box-shadow:var(--shadow);border:1.5px solid var(--border);
+  display:flex;flex-direction:column;gap:10px;
+  transition:transform .2s,box-shadow .2s;text-decoration:none !important;
 }
-.hero-badge-num {
-  font-family: 'Syne', sans-serif;
-  font-size: 22px; font-weight: 800;
-  color: var(--gold); display: block;
-}
-.hero-badge-lbl {
-  font-size: 10px; color: rgba(255,255,255,.5);
-  letter-spacing: .5px; text-transform: uppercase;
-}
+.stat-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(26,58,92,.13);border-color:var(--navy);}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.stat-num{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--txt);line-height:1;}
+.stat-label{font-size:12px;color:var(--txt-s);font-weight:400;}
+.stat-card.navy  .stat-icon{background:#e8eef5;color:var(--navy);}
+.stat-card.green .stat-icon{background:var(--green-l);color:var(--green);}
+.stat-card.gold  .stat-icon{background:var(--gold-l);color:#a07a20;}
+.stat-card.red   .stat-icon{background:var(--red-l);color:var(--red);}
+.stat-card.blue  .stat-icon{background:var(--blue-l);color:var(--blue);}
+.stat-card.purple .stat-icon{background:var(--purple-l);color:var(--purple);}
 
-/* ── Section titles ── */
-.dash-section-title {
-  font-family: 'Syne', sans-serif;
-  font-size: 12px; font-weight: 700;
-  color: var(--txt-s); letter-spacing: .8px;
-  text-transform: uppercase; margin: 24px 0 12px;
+/* ── Two col layout: apps left, recent right ── */
+.dash-two-col{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:14px;
+  align-items:start;
 }
+.apps-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;
+}
+.app-card{
+  background:var(--white);border-radius:var(--rad);
+  box-shadow:var(--shadow);border:1.5px solid var(--border);
+  overflow:hidden;transition:transform .2s,box-shadow .2s;
+}
+.app-card:hover{transform:translateY(-3px);box-shadow:0 8px 32px rgba(26,58,92,.13);}
+.app-card-head{
+  padding:16px 18px 12px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.app-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.app-card-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--navy);}
+.app-card-body{padding:10px 0;}
+.app-card-link{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:9px 18px;font-size:13px;color:var(--txt-m);
+  text-decoration:none !important;transition:background .15s,color .15s;
+}
+.app-card-link:hover{background:var(--off);color:var(--navy);}
+.app-card-link .link-name{display:flex;align-items:center;gap:8px;}
+.app-card-link .link-name i{font-size:12px;color:var(--txt-s);width:14px;text-align:center;}
+.link-actions{display:flex;gap:6px;}
+.link-btn{
+  padding:3px 10px;border-radius:6px;font-size:11px;font-weight:500;
+  text-decoration:none !important;transition:background .15s;display:flex;align-items:center;gap:4px;
+}
+.link-btn.add{background:#e8f7f0;color:var(--green);}
+.link-btn.edit{background:#eaf4fb;color:var(--blue);}
+.link-btn.add:hover{background:var(--green);color:#fff;}
+.link-btn.edit:hover{background:var(--blue);color:#fff;}
 
-/* ── Stats grid ── */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
-  margin-bottom: 8px;
+/* ── Recent card ── */
+.recent-card{
+  background:var(--white);border-radius:var(--rad);
+  box-shadow:var(--shadow);border:1.5px solid var(--border);
+  overflow:hidden;position:sticky;top:20px;
 }
-.stat-card {
-  background: var(--white);
-  border-radius: var(--rad);
-  padding: 18px 20px;
-  box-shadow: var(--shadow);
-  border: 1.5px solid var(--border);
-  display: flex; flex-direction: column; gap: 10px;
-  transition: transform .2s, box-shadow .2s;
-  text-decoration: none !important;
+.recent-head{
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--navy);
+  display:flex;align-items:center;gap:8px;
 }
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(26,58,92,.13);
-  border-color: var(--navy);
-}
-.stat-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-}
-.stat-num {
-  font-family: 'Syne', sans-serif;
-  font-size: 28px; font-weight: 800; color: var(--txt);
-  line-height: 1;
-}
-.stat-label {
-  font-size: 12px; color: var(--txt-s); font-weight: 400;
-}
-.stat-card.navy .stat-icon  { background: #e8eef5; }
-.stat-card.green .stat-icon { background: var(--green-l); }
-.stat-card.gold .stat-icon  { background: var(--gold-l); }
-.stat-card.red .stat-icon   { background: var(--red-l); }
-.stat-card.blue .stat-icon  { background: var(--blue-l); }
-.stat-card.purple .stat-icon{ background: var(--purple-l); }
+.recent-body{max-height:520px;overflow-y:auto;}
 
-/* ── App cards grid ── */
-.apps-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
+@media(max-width:1100px){
+  .dash-two-col{grid-template-columns:1fr;}
+  .recent-card{position:static;}
 }
-.app-card {
-  background: var(--white);
-  border-radius: var(--rad);
-  box-shadow: var(--shadow);
-  border: 1.5px solid var(--border);
-  overflow: hidden;
-  transition: transform .2s, box-shadow .2s;
-}
-.app-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 32px rgba(26,58,92,.13);
-}
-.app-card-head {
-  padding: 16px 18px 12px;
-  display: flex; align-items: center; gap: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.app-card-icon {
-  width: 38px; height: 38px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
-}
-.app-card-name {
-  font-family: 'Syne', sans-serif;
-  font-size: 13px; font-weight: 700; color: var(--navy);
-}
-.app-card-body { padding: 10px 0; }
-.app-card-link {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 9px 18px;
-  font-size: 13px; color: var(--txt-m);
-  text-decoration: none !important;
-  transition: background .15s, color .15s;
-  border-radius: 0;
-}
-.app-card-link:hover {
-  background: var(--off); color: var(--navy);
-}
-.app-card-link .link-actions {
-  display: flex; gap: 6px;
-}
-.link-btn {
-  padding: 3px 10px; border-radius: 6px;
-  font-size: 11px; font-weight: 500;
-  text-decoration: none !important;
-  transition: background .15s;
-}
-.link-btn.add  { background: #e8f7f0; color: var(--green); }
-.link-btn.edit { background: #eaf4fb; color: var(--blue); }
-.link-btn.add:hover  { background: var(--green); color: #fff; }
-.link-btn.edit:hover { background: var(--blue);  color: #fff; }
-
-/* ── Recent actions ── */
-.recent-card {
-  background: var(--white);
-  border-radius: var(--rad);
-  box-shadow: var(--shadow);
-  border: 1.5px solid var(--border);
-  overflow: hidden;
-}
-.recent-head {
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
-  font-family: 'Syne', sans-serif;
-  font-size: 13px; font-weight: 700; color: var(--navy);
-  display: flex; align-items: center; gap: 8px;
-}
-.recent-list { padding: 6px 0; max-height: 320px; overflow-y: auto; }
-.recent-item {
-  display: flex; align-items: flex-start; gap: 12px;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--border);
-  text-decoration: none !important;
-  transition: background .15s;
-}
-.recent-item:last-child { border-bottom: none; }
-.recent-item:hover { background: var(--off); }
-.recent-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  margin-top: 5px; flex-shrink: 0;
-}
-.recent-dot.add    { background: var(--green); }
-.recent-dot.change { background: var(--blue); }
-.recent-dot.delete { background: var(--red); }
-.recent-text { font-size: 13px; color: var(--txt-m); line-height: 1.4; }
-.recent-text strong { color: var(--txt); font-weight: 500; }
-.recent-time { font-size: 11px; color: var(--txt-s); margin-top: 2px; }
-
-/* ── Two col layout ── */
-.dash-two-col {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 14px;
-  margin-top: 8px;
-}
-
-@media(max-width: 900px) {
-  .dash-two-col { grid-template-columns: 1fr; }
-  .hero-right { display: none; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+@media(max-width:900px){
+  .hero-right{display:none;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .apps-grid{grid-template-columns:1fr;}
 }
 </style>
 {% endblock %}
@@ -251,7 +147,7 @@
 {% block content %}
 <div id="content-main">
 
-  <!-- ── Hero banner ── -->
+  <!-- Hero -->
   <div class="dashboard-hero">
     <div class="hero-left">
       <div class="hero-label">Tableau de bord</div>
@@ -274,312 +170,253 @@
     </div>
   </div>
 
-  <!-- ── Stats row ── -->
-  <div class="dash-section-title"> Vue d'ensemble</div>
+  <!-- Stats -->
+  <div class="dash-section-title"><i class="fas fa-chart-bar" style="margin-right:6px"></i>Vue d'ensemble</div>
   <div class="stats-grid">
     <a href="/admin/etudiants/etudiant/" class="stat-card navy">
-      <div class="stat-icon">🎓</div>
-      <div>
-        <div class="stat-num" id="sc-etudiants">—</div>
-        <div class="stat-label">Étudiants inscrits</div>
-      </div>
+      <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+      <div><div class="stat-num" id="sc-etudiants">—</div><div class="stat-label">Étudiants inscrits</div></div>
     </a>
     <a href="/admin/examens/examen/" class="stat-card gold">
-      <div class="stat-icon">📝</div>
-      <div>
-        <div class="stat-num" id="sc-examens">—</div>
-        <div class="stat-label">Examens planifiés</div>
-      </div>
+      <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+      <div><div class="stat-num" id="sc-examens">—</div><div class="stat-label">Examens planifiés</div></div>
     </a>
     <a href="/admin/surveillants/surveillant/" class="stat-card green">
-      <div class="stat-icon">👨‍🏫</div>
-      <div>
-        <div class="stat-num" id="sc-surveillants">—</div>
-        <div class="stat-label">Surveillants</div>
-      </div>
+      <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div><div class="stat-num" id="sc-surveillants">—</div><div class="stat-label">Surveillants</div></div>
     </a>
     <a href="/admin/examens/repartition/" class="stat-card blue">
-      <div class="stat-icon">🏛</div>
-      <div>
-        <div class="stat-num" id="sc-repartitions">—</div>
-        <div class="stat-label">Répartitions</div>
-      </div>
+      <div class="stat-icon"><i class="fas fa-sitemap"></i></div>
+      <div><div class="stat-num" id="sc-repartitions">—</div><div class="stat-label">Répartitions</div></div>
     </a>
     <a href="/admin/portal/presence/" class="stat-card purple">
-      <div class="stat-icon">✅</div>
-      <div>
-        <div class="stat-num" id="sc-presences">—</div>
-        <div class="stat-label">Présences enregistrées</div>
-      </div>
+      <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+      <div><div class="stat-num" id="sc-presences">—</div><div class="stat-label">Présences enregistrées</div></div>
     </a>
     <a href="/admin/salles/amphi/" class="stat-card red">
-      <div class="stat-icon">🏟</div>
-      <div>
-        <div class="stat-num" id="sc-salles">—</div>
-        <div class="stat-label">Salles / Amphithéâtres</div>
-      </div>
+      <div class="stat-icon"><i class="fas fa-building"></i></div>
+      <div><div class="stat-num" id="sc-salles">—</div><div class="stat-label">Salles / Amphithéâtres</div></div>
     </a>
   </div>
 
-  <!-- ── Apps + Recent ── -->
-  <div class="dash-section-title"> Accès rapide</div>
+  <!-- Two col: apps + recent -->
+  <div class="dash-section-title"><i class="fas fa-bolt" style="margin-right:6px"></i>Accès rapide</div>
   <div class="dash-two-col">
 
-    <!-- App cards -->
+    <!-- LEFT: App cards -->
     <div class="apps-grid">
 
-      <!-- Étudiants -->
       <div class="app-card">
         <div class="app-card-head">
-          <div class="app-card-icon" style="background:#e8eef5">🎓</div>
+          <div class="app-card-icon" style="background:#e8eef5;color:var(--navy)"><i class="fas fa-user-graduate"></i></div>
           <div class="app-card-name">Étudiants</div>
         </div>
         <div class="app-card-body">
           <div class="app-card-link">
-            <span>Années universitaires</span>
+            <span class="link-name"><i class="fas fa-calendar-alt"></i> Années universitaires</span>
             <div class="link-actions">
-              <a href="/admin/etudiants/annee/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/etudiants/annee/" class="link-btn edit">Voir</a>
+              <a href="/admin/etudiants/annee/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/etudiants/annee/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
           <div class="app-card-link">
-            <span>Étudiants</span>
+            <span class="link-name"><i class="fas fa-users"></i> Étudiants</span>
             <div class="link-actions">
-              <a href="/admin/etudiants/etudiant/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/etudiants/etudiant/" class="link-btn edit">Voir</a>
+              <a href="/admin/etudiants/etudiant/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/etudiants/etudiant/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Examens -->
       <div class="app-card">
         <div class="app-card-head">
-          <div class="app-card-icon" style="background:#fdf6e3">📝</div>
+          <div class="app-card-icon" style="background:#fdf6e3;color:#a07a20"><i class="fas fa-file-alt"></i></div>
           <div class="app-card-name">Examens</div>
         </div>
         <div class="app-card-body">
           <div class="app-card-link">
-            <span>Sessions</span>
+            <span class="link-name"><i class="fas fa-layer-group"></i> Sessions</span>
             <div class="link-actions">
-              <a href="/admin/examens/session/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/examens/session/" class="link-btn edit">Voir</a>
+              <a href="/admin/examens/session/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/examens/session/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
           <div class="app-card-link">
-            <span>Examens</span>
+            <span class="link-name"><i class="fas fa-pen-square"></i> Examens</span>
             <div class="link-actions">
-              <a href="/admin/examens/examen/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/examens/examen/" class="link-btn edit">Voir</a>
+              <a href="/admin/examens/examen/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/examens/examen/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
           <div class="app-card-link">
-            <span>Répartitions</span>
+            <span class="link-name"><i class="fas fa-th-large"></i> Répartitions</span>
             <div class="link-actions">
-              <a href="/admin/examens/repartition/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/examens/repartition/" class="link-btn edit">Voir</a>
+              <a href="/admin/examens/repartition/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/examens/repartition/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Surveillants -->
       <div class="app-card">
         <div class="app-card-head">
-          <div class="app-card-icon" style="background:#e8f7f0">👨‍🏫</div>
+          <div class="app-card-icon" style="background:#e8f7f0;color:var(--green)"><i class="fas fa-chalkboard-teacher"></i></div>
           <div class="app-card-name">Surveillants</div>
         </div>
         <div class="app-card-body">
           <div class="app-card-link">
-            <span>Surveillants</span>
+            <span class="link-name"><i class="fas fa-id-badge"></i> Surveillants</span>
             <div class="link-actions">
-              <a href="/admin/surveillants/surveillant/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/surveillants/surveillant/" class="link-btn edit">Voir</a>
+              <a href="/admin/surveillants/surveillant/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/surveillants/surveillant/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
           <div class="app-card-link">
-            <span>Comptes utilisateurs</span>
+            <span class="link-name"><i class="fas fa-user-lock"></i> Comptes utilisateurs</span>
             <div class="link-actions">
-              <a href="/admin/auth/user/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/auth/user/" class="link-btn edit">Voir</a>
+              <a href="/admin/auth/user/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/auth/user/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Salles -->
       <div class="app-card">
         <div class="app-card-head">
-          <div class="app-card-icon" style="background:#fdf0ef">🏛</div>
+          <div class="app-card-icon" style="background:#fdf0ef;color:var(--red)"><i class="fas fa-building"></i></div>
           <div class="app-card-name">Salles</div>
         </div>
         <div class="app-card-body">
           <div class="app-card-link">
-            <span>Amphithéâtres</span>
+            <span class="link-name"><i class="fas fa-university"></i> Amphithéâtres</span>
             <div class="link-actions">
-              <a href="/admin/salles/amphi/add/" class="link-btn add">+ Ajouter</a>
-              <a href="/admin/salles/amphi/" class="link-btn edit">Voir</a>
+              <a href="/admin/salles/amphi/add/" class="link-btn add"><i class="fas fa-plus"></i> Ajouter</a>
+              <a href="/admin/salles/amphi/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
           <div class="app-card-link">
-            <span>Sièges & QR codes</span>
+            <span class="link-name"><i class="fas fa-qrcode"></i> Sièges & QR codes</span>
             <div class="link-actions">
-              <a href="/admin/salles/seat/" class="link-btn edit">Voir</a>
+              <a href="/admin/salles/seat/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Portal -->
       <div class="app-card">
         <div class="app-card-head">
-          <div class="app-card-icon" style="background:#f5eef8">🌐</div>
+          <div class="app-card-icon" style="background:#f5eef8;color:var(--purple)"><i class="fas fa-globe"></i></div>
           <div class="app-card-name">Portal</div>
         </div>
         <div class="app-card-body">
           <div class="app-card-link">
-            <span>Présences</span>
+            <span class="link-name"><i class="fas fa-clipboard-check"></i> Présences</span>
             <div class="link-actions">
-              <a href="/admin/portal/presence/" class="link-btn edit">Voir</a>
+              <a href="/admin/portal/presence/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
           <div class="app-card-link">
-            <span>Profils utilisateurs</span>
+            <span class="link-name"><i class="fas fa-user-circle"></i> Profils utilisateurs</span>
             <div class="link-actions">
-              <a href="/admin/portal/userprofile/" class="link-btn edit">Voir</a>
+              <a href="/admin/portal/userprofile/" class="link-btn edit"><i class="fas fa-list"></i> Voir</a>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Liens rapides -->
       <div class="app-card">
         <div class="app-card-head">
-          <div class="app-card-icon" style="background:#eaf4fb">⚡</div>
+          <div class="app-card-icon" style="background:#eaf4fb;color:var(--blue)"><i class="fas fa-tools"></i></div>
           <div class="app-card-name">Outils rapides</div>
         </div>
         <div class="app-card-body">
           <a href="/examens/calendrier/" class="app-card-link" target="_blank">
-            <span>📅 Calendrier des examens</span>
+            <span class="link-name"><i class="fas fa-calendar-week"></i> Calendrier des examens</span>
+            <i class="fas fa-external-link-alt" style="font-size:11px;color:var(--txt-s)"></i>
           </a>
           <a href="/examens/convocations/" class="app-card-link" target="_blank">
-            <span>📄 Convocations surveillants</span>
+            <span class="link-name"><i class="fas fa-envelope-open-text"></i> Convocations surveillants</span>
+            <i class="fas fa-external-link-alt" style="font-size:11px;color:var(--txt-s)"></i>
           </a>
           <a href="/portal/surveillant/login/" class="app-card-link" target="_blank">
-            <span>🎓 Portal surveillant</span>
+            <span class="link-name"><i class="fas fa-sign-in-alt"></i> Portal surveillant</span>
+            <i class="fas fa-external-link-alt" style="font-size:11px;color:var(--txt-s)"></i>
           </a>
           <a href="/portal/etudiant/login/" class="app-card-link" target="_blank">
-            <span>📚 Portal étudiant</span>
+            <span class="link-name"><i class="fas fa-sign-in-alt"></i> Portal étudiant</span>
+            <i class="fas fa-external-link-alt" style="font-size:11px;color:var(--txt-s)"></i>
           </a>
         </div>
       </div>
 
-    </div>
+    </div><!-- end apps-grid -->
 
-    <!-- Recent actions -->
+    <!-- RIGHT: Actions récentes -->
     <div class="recent-card">
-      <div class="recent-head">🕐 Actions récentes</div>
-      <div class="recent-list">
-        {% for action in admin_log %}
-        <a href="{{ action.get_admin_url }}" class="recent-item">
-          <div class="recent-dot {% if action.is_addition %}add{% elif action.is_change %}change{% else %}delete{% endif %}"></div>
-          <div>
-            <div class="recent-text">
-              <strong>{{ action.object_repr|truncatechars:30 }}</strong><br>
-              {{ action.content_type.app_label|capfirst }} · 
-              {% if action.is_addition %}Ajout{% elif action.is_change %}Modification{% else %}Suppression{% endif %}
-            </div>
-            <div class="recent-time">{{ action.action_time|timesince }} ago</div>
-          </div>
-        </a>
-        {% empty %}
-        <div style="padding:20px;text-align:center;color:#8fa3bb;font-size:13px;">
-          Aucune action récente
+      <div class="recent-head">
+        <i class="fas fa-history"></i> Actions récentes
+      </div>
+      <div class="recent-body" id="recent-list">
+        <div style="padding:20px;text-align:center;color:var(--txt-s);font-size:13px;">
+          <i class="fas fa-spinner fa-spin"></i> Chargement...
         </div>
-        {% endfor %}
       </div>
     </div>
 
-  </div>
+  </div><!-- end dash-two-col -->
+
 </div>
 
 <script>
-// Fetch live counts from Django admin
-async function loadCounts() {
-  const endpoints = [
-    { id: ['sc-etudiants', 'stat-etudiants'], url: '/admin/etudiants/etudiant/' },
-    { id: ['sc-examens',   'stat-examens'],   url: '/admin/examens/examen/' },
-    { id: ['sc-surveillants','stat-surveillants'], url: '/admin/surveillants/surveillant/' },
-    { id: ['sc-repartitions'], url: '/admin/examens/repartition/' },
-    { id: ['sc-presences'],    url: '/admin/portal/presence/' },
-    { id: ['sc-salles'],       url: '/admin/salles/amphi/' },
-  ];
-
-  // Fetch counts via the admin API (result-list count in page)
-  // Since we can't easily get counts via AJAX, use the pre-loaded context
-  {% if app_list %}
-  {% for app in app_list %}
-  {% for model in app.models %}
-  (function() {
-    var name = '{{ model.name|lower }}';
-    var count = null;
-    // Map model names to stat card IDs
-    var map = {
-      'étudiant': ['sc-etudiants','stat-etudiants'],
-      'etudiants': ['sc-etudiants','stat-etudiants'],
-      'examen': ['sc-examens','stat-examens'],
-      'examens': ['sc-examens','stat-examens'],
-      'surveillant': ['sc-surveillants','stat-surveillants'],
-      'surveillants': ['sc-surveillants','stat-surveillants'],
-      'repartition': ['sc-repartitions'],
-      'répartition': ['sc-repartitions'],
-      'présence': ['sc-presences'],
-      'presence': ['sc-presences'],
-      'amphi': ['sc-salles'],
-    };
-    var ids = map[name] || map[name + 's'] || [];
-    ids.forEach(function(id) {
-      var el = document.getElementById(id);
-      if (el && el.textContent === '—') el.textContent = '{{ model.admin_url|default:"" }}' ? '✓' : '—';
-    });
-  })();
-  {% endfor %}
-  {% endfor %}
-  {% endif %}
-}
-
-// Load real counts via fetch
 document.addEventListener('DOMContentLoaded', function() {
   fetch('/admin/dashboard-stats/')
-    .then(r => r.json())
-    .then(data => {
-      if (data.etudiants    !== undefined) {
-        ['sc-etudiants','stat-etudiants'].forEach(id => {
-          var el = document.getElementById(id); if(el) el.textContent = data.etudiants;
-        });
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+
+      // Compteurs
+      var map = {
+        'etudiants':    ['sc-etudiants',    'stat-etudiants'],
+        'examens':      ['sc-examens',      'stat-examens'],
+        'surveillants': ['sc-surveillants', 'stat-surveillants'],
+        'repartitions': ['sc-repartitions'],
+        'presences':    ['sc-presences'],
+        'salles':       ['sc-salles'],
+      };
+      Object.keys(map).forEach(function(key) {
+        if (data[key] !== undefined) {
+          map[key].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = data[key];
+          });
+        }
+      });
+
+      // Actions récentes
+      if (data.log_entries && data.log_entries.length > 0) {
+        var colors = { add: '#1a8a5a', change: '#2471a3', delete: '#c0392b' };
+        var icons  = { add: 'fa-plus-circle', change: 'fa-edit', delete: 'fa-trash' };
+        var html = data.log_entries.map(function(e) {
+          return '<a href="' + e.url + '" style="display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);text-decoration:none;transition:background .15s;" onmouseover="this.style.background=\'var(--off)\'" onmouseout="this.style.background=\'\'">'
+            + '<div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:' + colors[e.action_type] + '22;flex-shrink:0;">'
+            + '<i class="fas ' + icons[e.action_type] + '" style="font-size:13px;color:' + colors[e.action_type] + '"></i></div>'
+            + '<div style="flex:1;min-width:0;">'
+            + '<div style="font-size:13px;color:var(--txt);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + e.object_repr + '</div>'
+            + '<div style="font-size:11px;color:var(--txt-s);margin-top:2px;">' + e.action + ' · ' + e.model + ' · ' + e.user + ' · ' + e.time + '</div>'
+            + '</div>'
+            + '<i class="fas fa-chevron-right" style="font-size:11px;color:var(--txt-s);flex-shrink:0;"></i>'
+            + '</a>';
+        }).join('');
+        document.getElementById('recent-list').innerHTML = html;
+      } else {
+        document.getElementById('recent-list').innerHTML =
+          '<div style="padding:20px;text-align:center;color:var(--txt-s);font-size:13px;">Aucune action récente</div>';
       }
-      if (data.examens      !== undefined) {
-        ['sc-examens','stat-examens'].forEach(id => {
-          var el = document.getElementById(id); if(el) el.textContent = data.examens;
-        });
-      }
-      if (data.surveillants !== undefined) {
-        ['sc-surveillants','stat-surveillants'].forEach(id => {
-          var el = document.getElementById(id); if(el) el.textContent = data.surveillants;
-        });
-      }
-      if (data.repartitions !== undefined) {
-        var el = document.getElementById('sc-repartitions'); if(el) el.textContent = data.repartitions;
-      }
-      if (data.presences    !== undefined) {
-        var el = document.getElementById('sc-presences'); if(el) el.textContent = data.presences;
-      }
-      if (data.salles       !== undefined) {
-        var el = document.getElementById('sc-salles'); if(el) el.textContent = data.salles;
-      }
+
     })
-    .catch(() => {
-      // If endpoint doesn't exist yet, show dashes
+    .catch(function() {
+      document.getElementById('recent-list').innerHTML =
+        '<div style="padding:20px;text-align:center;color:var(--txt-s);font-size:13px;"><i class="fas fa-exclamation-circle"></i> Erreur de chargement</div>';
     });
 });
 </script>

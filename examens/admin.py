@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.http import HttpResponseRedirect
 from etudiants.models import Etudiant
 from examens.models import Examen, Repartition, Session
+from examens.views import convocations_view
 from .forms import RepartitionAdminForm
 
 @admin.register(Session)
@@ -108,3 +109,73 @@ class RepartitionAdmin(admin.ModelAdmin):
 
     class Media:
         js = ('https://code.jquery.com/jquery-3.6.0.min.js',)
+
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.utils.decorators import method_decorator
+from django.views.generic import TemplateView
+from django.urls import path
+
+class CalendrierAdminView(TemplateView):
+    template_name = "admin/examens/calendrier.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Ajoute le contexte admin obligatoire pour que Jazzmin fonctionne
+        context.update(admin.site.each_context(self.request))
+        
+        from examens.models import Examen, Session
+        from datetime import date
+        
+        sessions = Session.objects.filter(is_active=True).order_by('-date_debut')
+        session_id = self.request.GET.get('session')
+        selected_session = None
+        
+        if session_id:
+            selected_session = Session.objects.get(pk=session_id)
+            examens = Examen.objects.filter(
+                session_id=session_id
+            ).order_by('date', 'heure_debut')
+        else:
+            examens = Examen.objects.filter(
+                session__is_active=True
+            ).order_by('date', 'heure_debut')
+
+        # Organise par date
+        from collections import defaultdict
+        examens_by_date = defaultdict(list)
+        for examen in examens:
+            examens_by_date[examen.date].append(examen)
+
+        context['sessions']          = sessions
+        context['selected_session']  = selected_session
+        context['examens_by_date']   = dict(sorted(examens_by_date.items()))
+        context['niveaux']           = ['1','2','3','4','5']
+        context['title']             = 'Calendrier des Examens'
+        return context
+    
+# À la fin de examens/admin.py
+from django.urls import path
+from django.contrib import admin
+
+original_get_urls = admin.site.get_urls
+
+def custom_get_urls():
+    urls = original_get_urls()
+
+    custom_urls = [
+        path(
+            "examens/convocations/",
+            admin.site.admin_view(convocations_view),
+            name="examens_convocations",
+        ),
+        path(
+            "examens/calendrier/",
+            admin.site.admin_view(CalendrierAdminView.as_view()),
+            name="examens_calendrier",
+        ),
+    ]
+
+    return custom_urls + urls
+
+admin.site.get_urls = custom_get_urls

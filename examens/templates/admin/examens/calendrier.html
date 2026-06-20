@@ -1,0 +1,251 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+/* même style que ta page calendrier existante */
+#content { background: #f4f7fb !important; padding: 24px !important; }
+
+/* Logo + title block: hidden on screen, shown only when printing/exporting to PDF */
+.cal-header {
+  display: none;
+}
+
+.cal-toolbar {
+  display: flex; align-items: center; justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.cal-filters {
+  background: #fff; border-radius: 12px; padding: 16px 20px;
+  margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 2px 12px rgba(26,58,92,.08); flex-wrap: wrap;
+}
+.cal-filters select {
+  padding: 8px 12px; border: 1.5px solid #dce4ee; border-radius: 8px;
+  font-size: 13px; outline: none; font-family: 'DM Sans', sans-serif;
+}
+.cal-filters select:focus { border-color: #1a3a5c; }
+.btn-filter {
+  padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+  background: #1a3a5c; color: #fff; transition: background .2s;
+}
+.btn-filter:hover { background: #254d7a; }
+.btn-export {
+  padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+  background: #2e7d32; color: #fff; transition: background .2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-export:hover { background: #1b5e20; }
+
+.cal-table-wrap {
+  background: #fff; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 4px 24px rgba(26,58,92,.08); border: 1.5px solid #dce4ee;
+}
+.cal-table { width: 100%; border-collapse: collapse; }
+.cal-table th {
+  background: #1a3a5c; color: #fff; padding: 12px 16px;
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+  text-align: center;
+}
+.cal-table th:first-child { text-align: left; width: 120px; }
+.cal-table td {
+  padding: 12px 16px; border-bottom: 1px solid #dce4ee;
+  vertical-align: top; font-size: 13px;
+}
+.cal-table td:first-child {
+  font-weight: 700; color: #1a3a5c; white-space: nowrap;
+  font-family: 'Syne', sans-serif;
+}
+.cal-table tr:last-child td { border-bottom: none; }
+.cal-table tr:hover td { background: #f4f7fb; }
+.cal-table td, .cal-table th { border-right: 1px solid #dce4ee; }
+.cal-table td:last-child, .cal-table th:last-child { border-right: none; }
+
+.cal-footer { display: none; }
+
+.exam-cell {
+  background: #f4f7fb; border-left: 3px solid #1a3a5c;
+  border-radius: 6px; padding: 6px 10px; font-size: 12px;
+}
+.exam-cell .exam-name { font-weight: 600; color: #1a3a5c; }
+.exam-cell .exam-time { color: #8fa3bb; font-size: 11px; margin-top: 2px; }
+.empty-cell { color: #dce4ee; text-align: center; }
+
+/* Print / PDF export styles */
+@media print {
+  * {
+    position: static !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  .cal-toolbar, .cal-filters,
+  #header, .breadcrumbs, #jazzy-sidebar, .app-sidebar,
+  .app-header, .content-header, .brand-link, .sidebar-wrapper,
+  nav, #nav-sidebar, .main-header, .main-sidebar,
+  .skip-link, a[href="#content-start"], a[href="#nav-sidebar"],
+  #skip-link, .skiplink, .visually-hidden, .sr-only,
+  #footer, .main-footer, footer { display: none !important; }
+
+  body, html, #content, #content-main, .app-wrapper, .wrapper,
+  .app-content, .content-wrapper, main {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    background: #fff !important;
+  }
+
+  .cal-header { display: block !important; text-align: center; margin-bottom: 24px; }
+  .cal-header .cal-header-row {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+  }
+  .cal-header img.cal-logo { height: 70px; }
+  .cal-header img.cal-cachet { height: 70px; }
+  .cal-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    color: #1a3a5c;
+    margin-top: 12px;
+  }
+  .cal-header .cal-meta {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: #4a607a;
+    margin-top: 6px;
+  }
+
+  .cal-table-wrap {
+    box-shadow: none !important;
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .cal-table td, .cal-table th { border: 1px solid #1a3a5c !important; }
+
+  .cal-table th {
+    background: #1a3a5c !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide Jazzmin's own footer/copyright line, show our cachet instead */
+  #footer, .main-footer, footer, .copyright { display: none !important; }
+  .cal-footer {
+    display: flex !important;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+  .cal-footer img { height: 90px; }
+}
+
+@page { margin: 0.6in; size: landscape; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+  <!-- Logo + title: hidden on screen, only appears in the printed/exported PDF -->
+  <div class="cal-header">
+    <div class="cal-header-row">
+      <img class="cal-logo" src="{% static 'images/logo.png' %}" alt="Faculté de Médecine et de Pharmacie - Laâyoune">
+    </div>
+    <h1>Planning des Examens</h1>
+    {% if selected_session %}
+    <p class="cal-meta">
+      Année universitaire : {{ selected_session.date_debut|date:"Y" }}-{{ selected_session.date_fin|date:"Y" }}
+      &nbsp;|&nbsp;
+      Session : {{ selected_session.nom }} ({{ selected_session.get_type_display }})
+    </p>
+    {% endif %}
+  </div>
+
+  <div class="cal-toolbar">
+    <button type="button" class="btn-export" onclick="window.print()">
+      <i class="fas fa-file-pdf"></i> Exporter en PDF
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <form method="get" class="cal-filters">
+    <label style="font-size:13px;font-weight:500;color:#4a607a;">
+      <i class="fas fa-calendar"></i> Session :
+    </label>
+    <select name="session" onchange="this.form.submit()">
+      <option value="">Toutes les sessions actives</option>
+      {% for session in sessions %}
+      <option value="{{ session.id }}" {% if selected_session.id == session.id %}selected{% endif %}>
+        {{ session.nom }} — {{ session.get_type_display }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn-filter">Filtrer</button>
+    <a href="?" class="btn-filter" style="background:#6c757d;text-decoration:none">Réinitialiser</a>
+  </form>
+
+  <!-- Calendar table -->
+  <div class="cal-table-wrap">
+    <table class="cal-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>1ère Année</th>
+          <th>2ème Année</th>
+          <th>3ème Année</th>
+          <th>4ème Année</th>
+          <th>5ème Année</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for date, examens in examens_by_date.items %}
+        <tr>
+          <td>
+            {{ date|date:"d/m/Y" }}<br>
+            <span style="font-size:11px;color:#8fa3bb;font-weight:400">
+              {{ date|date:"l" }}
+            </span>
+          </td>
+          {% for niveau in niveaux %}
+          <td>
+            {% for examen in examens %}
+              {% if examen.niveau == niveau %}
+              <div class="exam-cell">
+                <div class="exam-name">{{ examen.module }}</div>
+                <div class="exam-time">{{ examen.heure_debut|time:"H:i" }} – {{ examen.heure_fin|time:"H:i" }}</div>
+              </div>
+              {% endif %}
+            {% endfor %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="text-align:center;padding:40px;color:#8fa3bb;">
+            Aucun examen trouvé pour cette session.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Official stamp/cachet: hidden on screen, only appears in the printed/exported PDF -->
+  <div class="cal-footer">
+    <img src="{% static 'images/cache.png' %}" alt="Cachet FMPL">
+  </div>
+
+</div>
+{% endblock %}

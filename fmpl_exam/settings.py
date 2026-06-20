@@ -149,15 +149,30 @@ JAZZMIN_SETTINGS = {
     "custom_css": "css/admin-custom.css",
     
     # Login form customization
-    "login_logo": "images/logo.png",  # Logo on login page
+    "login_logo": "images/logo3.png",  # Logo on login page
     # Hide Jazzmin branding
     "show_ui_builder": False,
-    
+     
      "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index"},
         {"name": "Calendrier des Examens", "url": "/examens/calendrier/"},
          {"name":"Convocation", "url": "/examens/convocations/"},
     ], 
+      "custom_links": {
+    "examens": [{
+        "name":        "Calendrier des Examens",
+        "url":         "/admin/examens/calendrier/",
+        "icon":        "fas fa-calendar-week",
+        "permissions": ["auth.view_user"],
+    },
+    {
+        "name":        "Convocations",
+        "url":         "/examens/convocations/",
+        "icon":        "fas fa-file-alt",
+        "permissions": ["auth.view_user"],
+    }]
+},
+   
 
     # Custom icons
     "icons": {
@@ -187,7 +202,7 @@ EMAIL_HOST_PASSWORD = 'vxtx wddq qeto tpqd'    # ← App Password Gmail (pas ton
 DEFAULT_FROM_EMAIL = 'FMPL Laâyoune <aitider99@gmail.com>'
 
 # ── WhatsApp (Twilio) ─────────────────────────────────────────────
-TWILIO_ACCOUNT_SID  = ''  # ← depuis dashboard Twilio
-TWILIO_AUTH_TOKEN   = ''
+TWILIO_ACCOUNT_SID  = 'ACf6388eec7251167d91d350d469a85466'  # ← depuis dashboard Twilio
+TWILIO_AUTH_TOKEN   = '3f85b47b7895066494a6d83ecdd269ca'
 TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886'  # numéro sandbox Twilio
 

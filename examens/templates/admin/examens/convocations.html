@@ -1,0 +1,251 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+#content { background: #f4f7fb !important; padding: 24px !important; }
+
+.convocation-container {
+    padding: 0;
+}
+
+h1.conv-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    color: #1a3a5c;
+    margin-bottom: 20px;
+}
+
+.filter-bar {
+    background: #fff;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(26,58,92,.08);
+    border: 1.5px solid #dce4ee;
+}
+
+.filter-bar label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #4a607a;
+    margin-right: 10px;
+}
+
+.filter-bar select {
+    padding: 8px 12px;
+    border: 1.5px solid #dce4ee;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+}
+.filter-bar select:focus { border-color: #1a3a5c; }
+
+.session-info {
+    background: #fff;
+    border-left: 3px solid #1a3a5c;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #1a3a5c;
+    box-shadow: 0 2px 12px rgba(26,58,92,.08);
+}
+
+.actions-bar {
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-primary {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    background: #1a3a5c;
+    color: #fff;
+    transition: background .2s;
+}
+.btn-primary:hover { background: #254d7a; }
+
+.surveillants-table {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(26,58,92,.08);
+    border: 1.5px solid #dce4ee;
+}
+
+.surveillants-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.surveillants-table th {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 12px 16px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.surveillants-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #dce4ee;
+    vertical-align: middle;
+    font-size: 13px;
+}
+
+.surveillants-table tr:last-child td { border-bottom: none; }
+.surveillants-table tr:hover td { background: #f4f7fb; }
+
+.checkbox-col { width: 30px; text-align: center; }
+
+.btn-convocation {
+    background: #2e7d32;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    margin-right: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.btn-convocation:hover { background: #1b5e20; color: #fff; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+<div class="convocation-container">
+    <h1 class="conv-title"><i class="fas fa-file-alt"></i> Convocations des Surveillants</h1>
+
+    <!-- Filter Bar -->
+    <form method="get" class="filter-bar">
+        <label><i class="fas fa-calendar"></i> Filtrer par session :</label>
+        <select name="session" onchange="this.form.submit()">
+            <option value="">Toutes les sessions</option>
+            {% for session in sessions %}
+            <option value="{{ session.id }}" {% if selected_session.id == session.id %}selected{% endif %}>
+                {{ session.nom }} - {{ session.get_type_display }}
+            </option>
+            {% endfor %}
+        </select>
+    </form>
+
+    {% if selected_session %}
+    <div class="session-info">
+        <strong><i class="fas fa-thumbtack"></i> Session sélectionnée :</strong>
+        {{ selected_session.nom }} - {{ selected_session.get_type_display }}
+        ({{ selected_session.date_debut|date:"d/m/Y" }} - {{ selected_session.date_fin|date:"d/m/Y" }})
+    </div>
+    {% endif %}
+
+    <!-- Actions Bar -->
+    <div class="actions-bar">
+        <button class="btn-primary" onclick="generateSelectedConvocations()">
+            <i class="fas fa-file-pdf"></i> Générer les convocations sélectionnées
+        </button>
+        <span style="color:#8fa3bb;font-size:12px;">{{ surveillants|length }} surveillant(s) trouvé(s)</span>
+    </div>
+
+    <!-- Surveillants Table -->
+    <div class="surveillants-table">
+        <table>
+            <thead>
+                <tr>
+                    <th class="checkbox-col"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+                    <th>NOM</th>
+                    <th>EMAIL</th>
+                    <th>TÉLÉPHONE</th>
+                    <th>SPÉCIALITÉ</th>
+                    <th>NOMBRE D'EXAMENS</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for surveillant in surveillants %}
+                <tr>
+                    <td class="checkbox-col"><input type="checkbox" class="surv-checkbox" value="{{ surveillant.id }}"></td>
+                    <td><strong>{{ surveillant.nom }}</strong></td>
+                    <td>{{ surveillant.email|default:"-" }}</td>
+                    <td>{{ surveillant.telephone|default:"-" }}</td>
+                    <td>{{ surveillant.specialite|default:"-" }}</td>
+                    <td style="text-align:center;">{{ surveillant.examens_count }}</td>
+                    <td>
+                        {% if session_id %}
+                            <a href="{% url 'examens:generate_convocation_surveillant_session' surveillant.id session_id %}"
+                               class="btn-convocation" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+                            <a href="{% url 'examens:send_convocation_email_session' surveillant.id session_id %}"
+                               class="btn-convocation" style="background:#2980b9"
+                               onclick="return confirm('Envoyer par email à {{ surveillant.nom }} ?')"><i class="fas fa-envelope"></i> Email</a>
+                            <a href="{% url 'examens:send_convocation_whatsapp_session' surveillant.id session_id %}"
+                               class="btn-convocation" style="background:#25d366"
+                               onclick="return confirm('Envoyer sur WhatsApp à {{ surveillant.nom }} ?')"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        {% else %}
+                            <a href="{% url 'examens:generate_convocation_surveillant' surveillant.id %}"
+                               class="btn-convocation" target="_blank"><i class="fas fa-file-pdf"></i> PDF</a>
+                            <a href="{% url 'examens:send_convocation_email' surveillant.id %}"
+                               class="btn-convocation" style="background:#2980b9"
+                               onclick="return confirm('Envoyer par email à {{ surveillant.nom }} ?')"><i class="fas fa-envelope"></i> Email</a>
+                            <a href="{% url 'examens:send_convocation_whatsapp' surveillant.id %}"
+                               class="btn-convocation" style="background:#25d366"
+                               onclick="return confirm('Envoyer sur WhatsApp à {{ surveillant.nom }} ?')"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align:center;padding:40px;color:#8fa3bb;">
+                        Aucun surveillant trouvé pour cette session.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<script>
+function toggleAll(source) {
+    var checkboxes = document.querySelectorAll('.surv-checkbox');
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
+
+function generateSelectedConvocations() {
+    var checkboxes = document.querySelectorAll('.surv-checkbox:checked');
+    var selectedIds = [];
+    checkboxes.forEach(function(cb) {
+        selectedIds.push(cb.value);
+    });
+
+    if (selectedIds.length === 0) {
+        alert('Veuillez sélectionner au moins un surveillant');
+        return;
+    }
+
+    var sessionId = '{{ session_id|default:"" }}';
+    var url = '/examens/convocations/bulk/?ids=' + selectedIds.join(',');
+    if (sessionId) {
+        url += '&session=' + sessionId;
+    }
+
+    window.location.href = url;
+}
+</script>
+{% endblock %}

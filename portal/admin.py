@@ -35,12 +35,23 @@ from portal.models import UserProfile, Presence
 @admin.register(Presence)
 class PresenceAdmin(admin.ModelAdmin):
     list_display  = ('etudiant', 'repartition', 'present', 'scanne_par', 'heure_scan')
-    list_filter   = ('present', 'repartition__examen__date', 'repartition__amphi')
+    list_filter   = (
+        'present',
+        'repartition__examen__session',   # ← filtre par session
+        'repartition__examen__niveau',    # ← filtre par niveau
+        'repartition__examen__date',      # ← filtre par date
+        'repartition__amphi',             # ← filtre par amphi
+    )
     search_fields = ('etudiant__nom', 'etudiant__prenom', 'etudiant__apogee')
     readonly_fields = ('heure_scan',)
     list_per_page = 50
+    date_hierarchy = 'heure_scan'        # ← navigation par date en haut
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related(
-            'etudiant', 'repartition__examen', 'repartition__amphi', 'scanne_par'
+            'etudiant',
+            'repartition__examen__session',
+            'repartition__examen',
+            'repartition__amphi',
+            'scanne_par',
         )
