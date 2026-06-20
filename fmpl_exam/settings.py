@@ -202,7 +202,5 @@ EMAIL_HOST_PASSWORD = 'vxtx wddq qeto tpqd'    # ← App Password Gmail (pas ton
 DEFAULT_FROM_EMAIL = 'FMPL Laâyoune <aitider99@gmail.com>'
 
 # ── WhatsApp (Twilio) ─────────────────────────────────────────────
-TWILIO_ACCOUNT_SID  = 'ACf6388eec7251167d91d350d469a85466'  # ← depuis dashboard Twilio
-TWILIO_AUTH_TOKEN   = '3f85b47b7895066494a6d83ecdd269ca'
-TWILIO_WHATSAPP_FROM = 'whatsapp:+14155238886'  # numéro sandbox Twilio
+
 

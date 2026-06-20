@@ -2,12 +2,12 @@ from django.db import models
 
 # Create your models here.
 class Annee(models.Model):
-    nom = models.CharField(max_length=100)
+    filiere = models.CharField(max_length=100)
     annee_universitaire = models.CharField(max_length=9)
    
 
     def __str__(self):
-        return f"{self.annee_universitaire}"
+        return f"{self.annee_universitaire}-{self.filiere}"
     
 class Etudiant(models.Model):
     NIVEAU_CHOICES = [
