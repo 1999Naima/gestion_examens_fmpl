@@ -186,8 +186,8 @@ def etudiant_dashboard(request):
 
         numero_siege = None
         if repartition:
-            from examens.models import RepartitionSeat
-            assignment = RepartitionSeat.objects.filter(
+            from examens.models import Repartitionsiege
+            assignment = Repartitionsiege.objects.filter(
                 repartition=repartition,
                 etudiant=etudiant
             ).first()
@@ -214,31 +214,31 @@ def _role(user):
     return getattr(getattr(user, "profile", None), "role", None)
 
 @login_required(login_url="/portal/surveillant/login/")
-def scan_seat(request):
+def scan_siege(request):
     if request.method != "POST":
         return JsonResponse({"error": "Méthode non autorisée."}, status=405)
 
     try:
         data        = json.loads(request.body)
-        seat_number = int(data["seat_number"])
+        siege_number = int(data["siege_number"])
     except (KeyError, ValueError, json.JSONDecodeError):
         return JsonResponse({"error": "Données invalides."}, status=400)
 
-    from examens.models import RepartitionSeat
+    from examens.models import Repartitionsiege
     from portal.models import Presence
 
     surveillant = request.user.profile.surveillant
 
     # Cherche l'assignation par numéro de siège pour l'examen d'aujourd'hui
-    assignment = RepartitionSeat.objects.filter(
-        seat__seat_number=seat_number,
+    assignment = Repartitionsiege.objects.filter(
+        siege__siege_number=siege_number,
         repartition__examen__date=date.today(),
         repartition__surveillants=surveillant,
-    ).select_related("etudiant", "repartition", "seat__amphi").first()
+    ).select_related("etudiant", "repartition", "siege__amphi").first()
 
     if not assignment:
         return JsonResponse({
-            "error": f"Aucun étudiant assigné au siège {seat_number} pour aujourd'hui."
+            "error": f"Aucun étudiant assigné au siège {siege_number} pour aujourd'hui."
         }, status=404)
 
     presence, _ = Presence.objects.update_or_create(
@@ -252,5 +252,5 @@ def scan_seat(request):
         "nom":         str(assignment.etudiant),
         "etudiant_id": assignment.etudiant.pk,
         "rep_id":      assignment.repartition.pk,
-        "seat":        seat_number,
+        "siege":        siege_number,
     })

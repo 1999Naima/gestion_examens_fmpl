@@ -12,45 +12,45 @@ class Amphi(models.Model):
     def __str__(self):
         return self.nom
     
-    def generate_all_seat_qrs(self):
-        """Generate QR codes for all seats (1 to capacite)"""
+    def generate_all_siege_qrs(self):
+        """Generate QR codes for all sieges (1 to capacite)"""
         created = 0
-        for seat_num in range(1, self.capacite + 1):
-            seat, created_flag = Seat.objects.get_or_create(
+        for siege_num in range(1, self.capacite + 1):
+            siege, created_flag = siege.objects.get_or_create(
                 amphi=self,
-                seat_number=seat_num
+                siege_number=siege_num
             )
             if created_flag:
-                # Generate QR code for new seat
-                seat.generate_qr_code()
-                seat.save()
+                # Generate QR code for new siege
+                siege.generate_qr_code()
+                siege.save()
                 created += 1
-            elif not seat.qr_code:
-                # If seat exists but no QR code, generate it
-                seat.generate_qr_code()
-                seat.save()
+            elif not siege.qr_code:
+                # If siege exists but no QR code, generate it
+                siege.generate_qr_code()
+                siege.save()
                 created += 1
         return created
 
-class Seat(models.Model):
-    amphi = models.ForeignKey(Amphi, on_delete=models.CASCADE, related_name='seats')
-    seat_number = models.IntegerField()
-    qr_code = models.ImageField(upload_to='qr_codes/seats/', blank=True, null=True)
+class siege(models.Model):
+    amphi = models.ForeignKey(Amphi, on_delete=models.CASCADE, related_name='sieges')
+    siege_number = models.IntegerField()
+    qr_code = models.ImageField(upload_to='qr_codes/sieges/', blank=True, null=True)
     
     class Meta:
-        unique_together = ['amphi', 'seat_number']
-        ordering = ['seat_number']
+        unique_together = ['amphi', 'siege_number']
+        ordering = ['siege_number']
     
     def __str__(self):
-        return f"{self.amphi.nom} - Seat {self.seat_number}"
+        return f"{self.amphi.nom} - siege {self.siege_number}"
     
     def generate_qr_code(self):
-        """Generate QR code for this specific seat"""
+        """Generate QR code for this specific siege"""
         from io import BytesIO
         import qrcode
         
-        # Simple QR data - just seat identification
-        qr_data = f"Amphi: {self.amphi.nom} | Seat: {self.seat_number}"
+        # Simple QR data - just siege identification
+        qr_data = f"Amphi: {self.amphi.nom} | siege: {self.siege_number}"
         
         # Generate QR code
         qr = qrcode.QRCode(
@@ -70,5 +70,5 @@ class Seat(models.Model):
         qr_image.save(buffer, format='PNG')
         buffer.seek(0)
         
-        filename = f"seat_{self.amphi.id}_{self.seat_number}.png"
+        filename = f"siege_{self.amphi.id}_{self.siege_number}.png"
         self.qr_code.save(filename, File(buffer), save=False)

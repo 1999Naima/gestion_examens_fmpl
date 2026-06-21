@@ -145,44 +145,78 @@ JAZZMIN_SETTINGS = {
     "welcome_sign": "Bienvenue - Gestion des Examens",
 
     "copyright": "Faculté de Médecine et Pharmacie Laayoune",
-      # Custom CSS for login page
     "custom_css": "css/admin-custom.css",
-    
-    # Login form customization
-    "login_logo": "images/logo3.png",  # Logo on login page
-    # Hide Jazzmin branding
-    "show_ui_builder": False,
-     
-     "topmenu_links": [
-        {"name": "Dashboard", "url": "admin:index"},
-        {"name": "Calendrier des Examens", "url": "/examens/calendrier/"},
-         {"name":"Convocation", "url": "/examens/convocations/"},
-    ], 
-      "custom_links": {
-    "examens": [{
-        "name":        "Calendrier des Examens",
-        "url":         "/admin/examens/calendrier/",
-        "icon":        "fas fa-calendar-week",
-        "permissions": ["auth.view_user"],
-    },
-    {
-        "name":        "Convocations",
-        "url":         "/examens/convocations/",
-        "icon":        "fas fa-file-alt",
-        "permissions": ["auth.view_user"],
-    }]
-},
-   
 
-    # Custom icons
+    "login_logo": "images/logo3.png",
+    "show_ui_builder": False,
+
+    "topmenu_links": [
+        {"name": "Dashboard", "url": "admin:index"},
+      #  {"name": "Calendrier des Examens", "url": "/admin/examens/calendrier/"},
+      #  {"name": "Convocation", "url": "/examens/convocations/"},
+    ],
+
+    "custom_links": {
+        "examens": [
+            {
+                "name": "Calendrier des Examens",
+                "url": "/admin/examens/calendrier/",
+                "icon": "fas fa-calendar-week",
+                "permissions": ["auth.view_user"],
+            },
+            {
+                "name": "Convocations",
+                "url": "/examens/convocations/",
+                "icon": "fas fa-file-alt",
+                "permissions": ["auth.view_user"],
+            },
+        ]
+    },
+
+    # All custom icons merged into ONE dict
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+        "etudiants.Annee": "fas fa-calendar-alt",
+        "etudiants.Etudiant": "fas fa-user-graduate",
+        "examens.Session": "fas fa-layer-group",
+        "examens.Examen": "fas fa-file-signature",
+        "examens.Repartition": "fas fa-th-large",
+        "portal.Presence": "fas fa-clipboard-check",
+        "salles.Amphi": "fas fa-school",
+        "salles.siege": "fas fa-couch",
+        "surveillants.Surveillant": "fas fa-user-shield",
+
     },
-    
-    # Theme customization
-    "theme": "flatly",  # or "darkly", "flatly", "simplex", etc.
+
+
+      "order_with_respect_to": [
+        "auth",
+
+        "etudiants",
+        "etudiants.Annee",
+        "etudiants.Etudiant",
+        
+        "surveillants",
+        "surveillants.Surveillant",
+
+        "examens",
+        "examens.Session",
+        "examens.Examen",
+        "examens.Repartition",
+
+        "salles",
+        "salles.Amphi",
+        "salles.siege",
+
+        "portal",
+        "portal.Presence",
+
+        
+    ],
+
+    "theme": "flatly",
     "dark_mode_theme": "darkly",
 }
 

@@ -81,7 +81,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
   border-bottom:1px solid var(--border);gap:12px;transition:background .15s}
 .student-row:last-child{border-bottom:none}
 .student-row:hover{background:var(--off)}
-.seat{width:32px;height:32px;border-radius:8px;background:var(--off);
+.siege{width:32px;height:32px;border-radius:8px;background:var(--off);
   border:1.5px solid var(--border);display:flex;align-items:center;
   justify-content:center;font-family:'Syne',sans-serif;font-size:11px;
   font-weight:700;color:var(--txt-m);flex-shrink:0}
@@ -193,7 +193,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
         <div class="student-row" id="row-{{ rep.id }}-{{ etudiant.id }}"
              data-name="{{ etudiant.nom }} {{ etudiant.prenom }}"
              data-apogee="{{ etudiant.apogee }}">
-          <div class="seat">{{ forloop.counter }}</div>
+          <div class="siege">{{ forloop.counter }}</div>
           <div class="student-info">
             <div class="student-name">{{ etudiant.nom }} {{ etudiant.prenom }}</div>
             <div class="student-apogee">Apogée : {{ etudiant.apogee }}</div>
@@ -333,22 +333,22 @@ async function onQrSuccess(decodedText) {
   showScanResult('QR lu : [' + decodedText + ']', true);
 
   // Step 2 — parse
-  const match = decodedText.match(/Amphi:\s*(.+?)\s*\|\s*Seat:\s*(\d+)/i);
+  const match = decodedText.match(/Amphi:\s*(.+?)\s*\|\s*siege:\s*(\d+)/i);
   if (!match) {
     showScanResult('❌ Format invalide : [' + decodedText + ']', false);
     return;
   }
 
-  const seatNumber = parseInt(match[2]);
-  showScanResult('✅ Siège ' + seatNumber + ' détecté — envoi au serveur...', true);
+  const siegeNumber = parseInt(match[2]);
+  showScanResult('✅ Siège ' + siegeNumber + ' détecté — envoi au serveur...', true);
 
   if (html5QrCode) html5QrCode.pause();
 
   try {
-    const resp = await fetch('/portal/surveillant/scan-seat/', {
+    const resp = await fetch('/portal/surveillant/scan-siege/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-      body: JSON.stringify({ seat_number: seatNumber }),
+      body: JSON.stringify({ siege_number: siegeNumber }),
     });
 
     // Read as text first to catch any Django error page
@@ -363,7 +363,7 @@ async function onQrSuccess(decodedText) {
     }
 
     if (resp.ok && data.ok) {
-      showScanResult('✓ ' + data.nom + ' — Siège ' + seatNumber + ' — Présence enregistrée ✅', true);
+      showScanResult('✓ ' + data.nom + ' — Siège ' + siegeNumber + ' — Présence enregistrée ✅', true);
       showToast('✓ ' + data.nom + ' présent', 'green');
       // Update button in list if panel is open
       const btn = document.getElementById(`btn-${data.rep_id}-${data.etudiant_id}`);

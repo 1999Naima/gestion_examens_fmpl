@@ -75,11 +75,11 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
 .affectation-left{display:flex;flex-direction:column;gap:3px}
 .aff-label{font-size:10px;color:var(--txt-s);letter-spacing:.5px;text-transform:uppercase}
 .aff-amphi{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--teal-d)}
-.aff-seat{display:flex;align-items:center;gap:6px;margin-top:4px}
-.seat-num{width:36px;height:36px;border-radius:10px;background:var(--teal);
+.aff-siege{display:flex;align-items:center;gap:6px;margin-top:4px}
+.siege-num{width:36px;height:36px;border-radius:10px;background:var(--teal);
   display:flex;align-items:center;justify-content:center;
   font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--white)}
-.seat-label{font-size:12px;color:var(--txt-m)}
+.siege-label{font-size:12px;color:var(--txt-m)}
 .no-affectation{font-size:12px;color:var(--txt-s);font-style:italic}
 
 /* ── Empty ── */
@@ -154,9 +154,9 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
           <span class="aff-amphi">{{ item.repartition.amphi.nom }}</span>
         </div>
         {% if item.numero_siege %}
-        <div class="aff-seat">
-          <div class="seat-num">{{ item.numero_siege }}</div>
-          <span class="seat-label">N° de siège</span>
+        <div class="aff-siege">
+          <div class="siege-num">{{ item.numero_siege }}</div>
+          <span class="siege-label">N° de siège</span>
         </div>
         {% endif %}
       </div>

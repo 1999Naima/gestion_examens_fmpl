@@ -5,9 +5,10 @@ from etudiants.models import Annee, Etudiant
 
 @admin.register(Annee)
 class AnneeAdmin(admin.ModelAdmin):
-    list_display = ("id","filiere", "annee_universitaire")
+    list_display = ("id","filiere", "annee_universitaire",'is_active')
     search_fields = ("filiere", "annee_universitaire")
     list_filter = ("filiere",)
+    list_editable = ('is_active',)
 
 
 @admin.register(Etudiant)

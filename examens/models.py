@@ -103,16 +103,16 @@ class Repartition(models.Model):
     
 
 
-from salles.models import Seat
+from salles.models import siege
 
-class RepartitionSeat(models.Model):
-    repartition = models.ForeignKey(Repartition, on_delete=models.CASCADE, related_name='seat_assignments')
+class Repartitionsiege(models.Model):
+    repartition = models.ForeignKey(Repartition, on_delete=models.CASCADE, related_name='siege_assignments')
     etudiant    = models.ForeignKey('etudiants.Etudiant', on_delete=models.CASCADE)
-    seat        = models.ForeignKey(Seat, on_delete=models.CASCADE)
+    siege        = models.ForeignKey(siege, on_delete=models.CASCADE)
     numero      = models.IntegerField()  # numéro d'ordre dans la salle
 
     class Meta:
-        unique_together = [('repartition', 'seat'), ('repartition', 'etudiant')]
+        unique_together = [('repartition', 'siege'), ('repartition', 'etudiant')]
 
     def __str__(self):
-        return f"N°{self.numero} — {self.etudiant} → {self.seat}"
+        return f"N°{self.numero} — {self.etudiant} → {self.siege}"

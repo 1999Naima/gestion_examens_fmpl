@@ -13,19 +13,36 @@
   display: none;
 }
 
+/* Visible on-screen title bar: title on the left, export button on the right */
 .cal-toolbar {
-  display: flex; align-items: center; justify-content: flex-end;
-  margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.cal-toolbar h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin: 0;
 }
 
 .cal-filters {
   background: #fff; border-radius: 12px; padding: 16px 20px;
-  margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
-  box-shadow: 0 2px 12px rgba(26,58,92,.08); flex-wrap: wrap;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  box-shadow: 0 2px 12px rgba(26,58,92,.08);
+}
+.cal-filters .filter-group {
+  display: flex; align-items: center; gap: 8px;
+}
+.cal-filters label {
+  font-size: 13px; font-weight: 500; color: #4a607a;
+  white-space: nowrap;
 }
 .cal-filters select {
   padding: 8px 12px; border: 1.5px solid #dce4ee; border-radius: 8px;
   font-size: 13px; outline: none; font-family: 'DM Sans', sans-serif;
+  min-width: 200px;
 }
 .cal-filters select:focus { border-color: #1a3a5c; }
 .btn-filter {
@@ -39,6 +56,7 @@
   font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif;
   background: #2e7d32; color: #fff; transition: background .2s;
   display: inline-flex; align-items: center; gap: 6px;
+  white-space: nowrap;
 }
 .btn-export:hover { background: #1b5e20; }
 
@@ -76,6 +94,30 @@
 .exam-cell .exam-time { color: #8fa3bb; font-size: 11px; margin-top: 2px; }
 .empty-cell { color: #dce4ee; text-align: center; }
 
+/* Filière colors */
+.exam-cell.filiere-medecine {
+  background: #e8f0fe; border-left-color: #1a3a5c;
+}
+.exam-cell.filiere-medecine .exam-name { color: #1a3a5c; }
+
+.exam-cell.filiere-pharmacie {
+  background: #e8f7ee; border-left-color: #1b7a43;
+}
+.exam-cell.filiere-pharmacie .exam-name { color: #1b7a43; }
+
+/* Legend */
+.cal-legend {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  margin-bottom: 16px; font-size: 12px; color: #4a607a;
+  font-family: 'DM Sans', sans-serif;
+}
+.cal-legend .legend-item { display: flex; align-items: center; gap: 6px; }
+.cal-legend .legend-dot {
+  width: 11px; height: 11px; border-radius: 3px; display: inline-block;
+}
+.legend-dot.filiere-medecine  { background: #1a3a5c; }
+.legend-dot.filiere-pharmacie { background: #1b7a43; }
+
 /* Print / PDF export styles */
 @media print {
   * {
@@ -84,7 +126,7 @@
     overflow: visible !important;
   }
 
-  .cal-toolbar, .cal-filters,
+  .cal-toolbar, .cal-filters, .cal-legend,
   #header, .breadcrumbs, #jazzy-sidebar, .app-sidebar,
   .app-header, .content-header, .brand-link, .sidebar-wrapper,
   nav, #nav-sidebar, .main-header, .main-sidebar,
@@ -164,37 +206,62 @@
       <img class="cal-logo" src="{% static 'images/logo.png' %}" alt="Faculté de Médecine et de Pharmacie - Laâyoune">
     </div>
     <h1>Planning des Examens</h1>
-    {% if selected_session %}
+    {% if selected_session or selected_filiere %}
     <p class="cal-meta">
+      {% if selected_session %}
       Année universitaire : {{ selected_session.date_debut|date:"Y" }}-{{ selected_session.date_fin|date:"Y" }}
       &nbsp;|&nbsp;
       Session : {{ selected_session.nom }} ({{ selected_session.get_type_display }})
+      {% endif %}
+      {% if selected_filiere %}
+      &nbsp;|&nbsp; Filière : {{ selected_filiere }}
+      {% endif %}
     </p>
     {% endif %}
   </div>
 
+  <!-- Visible on-screen title bar: title left, export button right -->
   <div class="cal-toolbar">
+    <h1>Calendrier des Examens</h1>
     <button type="button" class="btn-export" onclick="window.print()">
       <i class="fas fa-file-pdf"></i> Exporter en PDF
     </button>
   </div>
 
-  <!-- Filters -->
+  <!-- Filters: Session + Filière on the same row -->
   <form method="get" class="cal-filters">
-    <label style="font-size:13px;font-weight:500;color:#4a607a;">
-      <i class="fas fa-calendar"></i> Session :
-    </label>
-    <select name="session" onchange="this.form.submit()">
-      <option value="">Toutes les sessions actives</option>
-      {% for session in sessions %}
-      <option value="{{ session.id }}" {% if selected_session.id == session.id %}selected{% endif %}>
-        {{ session.nom }} — {{ session.get_type_display }}
-      </option>
-      {% endfor %}
-    </select>
+    <div class="filter-group">
+      <label><i class="fas fa-calendar"></i> Session :</label>
+      <select name="session" onchange="this.form.submit()">
+        {% for session in sessions %}
+        <option value="{{ session.id }}" {% if selected_session.id == session.id %}selected{% endif %}>
+          {{ session.nom }} — {{ session.get_type_display }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label><i class="fas fa-graduation-cap"></i> Filière :</label>
+      <select name="filiere" onchange="this.form.submit()">
+      
+        {% for filiere in filieres %}
+        <option value="{{ filiere }}" {% if selected_filiere == filiere %}selected{% endif %}>
+          {{ filiere }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
     <button type="submit" class="btn-filter">Filtrer</button>
     <a href="?" class="btn-filter" style="background:#6c757d;text-decoration:none">Réinitialiser</a>
   </form>
+
+  <!-- Filière legend -->
+  <div class="cal-legend">
+    <span class="legend-item"><span class="legend-dot filiere-medecine"></span> Médecine</span>
+    <span class="legend-item"><span class="legend-dot filiere-pharmacie"></span> Pharmacie</span>
+  </div>
 
   <!-- Calendar table -->
   <div class="cal-table-wrap">
@@ -222,7 +289,7 @@
           <td>
             {% for examen in examens %}
               {% if examen.niveau == niveau %}
-              <div class="exam-cell">
+              <div class="exam-cell filiere-{{ examen.annee.filiere|slugify }}">
                 <div class="exam-name">{{ examen.module }}</div>
                 <div class="exam-time">{{ examen.heure_debut|time:"H:i" }} – {{ examen.heure_fin|time:"H:i" }}</div>
               </div>

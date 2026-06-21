@@ -3,24 +3,24 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.http import HttpResponse
 from django.contrib.admin.views.decorators import staff_member_required
-from .models import Amphi, Seat
+from .models import Amphi, siege
 import zipfile
 from io import BytesIO
 
 @staff_member_required
-def generate_seats_view(request, amphi_id):
+def generate_sieges_view(request, amphi_id):
     amphi = get_object_or_404(Amphi, id=amphi_id)
-    existing = Seat.objects.filter(amphi=amphi).count()
+    existing = siege.objects.filter(amphi=amphi).count()
     
     if existing < amphi.capacite:
         created = 0
         for i in range(1, amphi.capacite + 1):
-            if not Seat.objects.filter(amphi=amphi, seat_number=i).exists():
-                Seat.objects.create(amphi=amphi, seat_number=i)
+            if not siege.objects.filter(amphi=amphi, siege_number=i).exists():
+                siege.objects.create(amphi=amphi, siege_number=i)
                 created += 1
-        messages.success(request, f"Created {created} seats for {amphi.nom}")
+        messages.success(request, f"Created {created} sieges for {amphi.nom}")
     else:
-        messages.info(request, f"{amphi.nom} already has all {existing} seats")
+        messages.info(request, f"{amphi.nom} already has all {existing} sieges")
     
     return redirect('admin:salles_amphi_change', amphi_id)
 
@@ -30,11 +30,11 @@ def download_qrs_view(request, amphi_id):
     
     buffer = BytesIO()
     with zipfile.ZipFile(buffer, 'w') as zip_file:
-        for seat in amphi.seats.all():
-            if seat.qr_code and seat.qr_code.path:
+        for siege in amphi.sieges.all():
+            if siege.qr_code and siege.qr_code.path:
                 try:
-                    with open(seat.qr_code.path, 'rb') as f:
-                        zip_file.writestr(f"{amphi.nom}_seat_{seat.seat_number}.png", f.read())
+                    with open(siege.qr_code.path, 'rb') as f:
+                        zip_file.writestr(f"{amphi.nom}_siege_{siege.siege_number}.png", f.read())
                 except FileNotFoundError:
                     continue
     

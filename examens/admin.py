@@ -3,7 +3,7 @@ from django.contrib import admin, messages
 from django.urls import reverse
 from django.utils.html import format_html
 from django.http import HttpResponseRedirect
-from etudiants.models import Etudiant
+from etudiants.models import Annee, Etudiant
 from examens.models import Examen, Repartition, Session
 from examens.views import convocations_view
 from .forms import RepartitionAdminForm
@@ -28,6 +28,25 @@ class ExamenAdmin(admin.ModelAdmin):
     def display_semester(self, obj):
         return obj.get_semester_display()
     display_semester.short_description = "Semestre"
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "session":
+            kwargs["queryset"] = Session.objects.filter(is_active=True)
+        if db_field.name == "annee":
+            kwargs["queryset"] = Annee.objects.filter(is_active=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        active_session = Session.objects.filter(is_active=True).first()
+        if active_session:
+            initial['session'] = active_session.pk
+
+        active_annee = Annee.objects.filter(is_active=True).first()
+        if active_annee:
+            initial['annee'] = active_annee.pk
+
+        return initial
 
 @admin.register(Repartition)
 class RepartitionAdmin(admin.ModelAdmin):
@@ -63,26 +82,26 @@ class RepartitionAdmin(admin.ModelAdmin):
     generate_presence_list.short_description = "Générer la liste de présence"
 
     def assigner_sieges(self, request, queryset):  # ← méthode de la classe
-        from salles.models import Seat
-        from examens.models import RepartitionSeat
+        from salles.models import siege
+        from examens.models import Repartitionsiege
 
         for rep in queryset:
-            seats     = list(rep.amphi.seats.order_by('seat_number'))
+            sieges     = list(rep.amphi.sieges.order_by('siege_number'))
             etudiants = list(rep.etudiants.order_by('nom', 'prenom'))
 
-            if len(seats) < len(etudiants):
+            if len(sieges) < len(etudiants):
                 self.message_user(request,
-                    f"⚠️ {rep.amphi.nom} : {len(seats)} sièges mais {len(etudiants)} étudiants.",
+                    f"⚠️ {rep.amphi.nom} : {len(sieges)} sièges mais {len(etudiants)} étudiants.",
                     messages.WARNING)
                 continue
 
-            RepartitionSeat.objects.filter(repartition=rep).delete()
+            Repartitionsiege.objects.filter(repartition=rep).delete()
 
-            for i, (etudiant, seat) in enumerate(zip(etudiants, seats), start=1):
-                RepartitionSeat.objects.create(
+            for i, (etudiant, siege) in enumerate(zip(etudiants, sieges), start=1):
+                Repartitionsiege.objects.create(
                     repartition=rep,
                     etudiant=etudiant,
-                    seat=seat,
+                    siege=siege,
                     numero=i,
                 )
 
@@ -115,31 +134,40 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 from django.urls import path
-
 class CalendrierAdminView(TemplateView):
     template_name = "admin/examens/calendrier.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Ajoute le contexte admin obligatoire pour que Jazzmin fonctionne
         context.update(admin.site.each_context(self.request))
         
         from examens.models import Examen, Session
+        from etudiants.models import Annee
         from datetime import date
         
         sessions = Session.objects.filter(is_active=True).order_by('-date_debut')
         session_id = self.request.GET.get('session')
         selected_session = None
-        
+
+        # ── Filtre par filière ──
+        filiere = self.request.GET.get('filiere')
+        filieres = (Annee.objects
+                    .values_list('filiere', flat=True)
+                    .distinct()
+                    .order_by('filiere'))
+
+        examens_qs = Examen.objects.select_related('annee', 'session')
+
         if session_id:
             selected_session = Session.objects.get(pk=session_id)
-            examens = Examen.objects.filter(
-                session_id=session_id
-            ).order_by('date', 'heure_debut')
+            examens_qs = examens_qs.filter(session_id=session_id)
         else:
-            examens = Examen.objects.filter(
-                session__is_active=True
-            ).order_by('date', 'heure_debut')
+            examens_qs = examens_qs.filter(session__is_active=True)
+
+        if filiere:
+            examens_qs = examens_qs.filter(annee__filiere=filiere)
+
+        examens = examens_qs.order_by('date', 'heure_debut')
 
         # Organise par date
         from collections import defaultdict
@@ -151,9 +179,11 @@ class CalendrierAdminView(TemplateView):
         context['selected_session']  = selected_session
         context['examens_by_date']   = dict(sorted(examens_by_date.items()))
         context['niveaux']           = ['1','2','3','4','5']
+        context['filieres']          = filieres
+        context['selected_filiere']  = filiere
         context['title']             = 'Calendrier des Examens'
         return context
-    
+       
 # À la fin de examens/admin.py
 from django.urls import path
 from django.contrib import admin

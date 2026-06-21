@@ -4,8 +4,12 @@ from django.db import models
 class Annee(models.Model):
     filiere = models.CharField(max_length=100)
     annee_universitaire = models.CharField(max_length=9)
-   
-
+    is_active = models.BooleanField(default=True) 
+    
+    class Meta:
+        verbose_name = "Année universitaire"
+        verbose_name_plural = "Années universitaires"
+        
     def __str__(self):
         return f"{self.annee_universitaire}-{self.filiere}"
     
