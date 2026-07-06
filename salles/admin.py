@@ -14,183 +14,294 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.pdfgen import canvas
 from PIL import Image
 
+
 class siegeInline(admin.TabularInline):
     model = siege
     extra = 0
     fields = ('siege_number', 'qr_code_preview')
     readonly_fields = ('siege_number', 'qr_code_preview')
-    
+
     def qr_code_preview(self, obj):
         if obj.qr_code:
             return format_html('<img src="{}" width="50" height="50" />', obj.qr_code.url)
-        return "Not generated"
+        return "Non généré"
     qr_code_preview.short_description = "QR Code"
+
 
 @admin.register(Amphi)
 class AmphiAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'capacite', 'sieges_count', 'generate_qrs_button', 'download_qrs_button', 'print_pdf_button')
+    list_display = ('nom', 'capacite', 'sieges_count',
+                    'generate_qrs_button', 'print_pdf_button')
     inlines = [siegeInline]
-    
+
+    class Media:
+        css = {
+            'all': ('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',)
+        }
+
     def sieges_count(self, obj):
         count = obj.sieges.count()
-        return f"{count} / {obj.capacite}"
-    sieges_count.short_description = "sieges with QR"
-    
+        pct   = int(count / obj.capacite * 100) if obj.capacite else 0
+        color = '#2e7d32' if pct == 100 else '#e65100' if pct == 0 else '#1565c0'
+        return format_html(
+            '''
+            <div style="display:flex;align-items:center;gap:8px;min-width:120px">
+              <div style="flex:1;background:#e0e0e0;border-radius:99px;height:7px;overflow:hidden">
+                <div style="width:{}%;background:{};height:100%;border-radius:99px;
+                            transition:width .3s"></div>
+              </div>
+              <span style="font-size:12px;font-weight:600;color:{};">{}&nbsp;/&nbsp;{}</span>
+            </div>
+            ''',
+            pct, color, color, count, obj.capacite
+        )
+    sieges_count.short_description = "Sièges / QR"
+
     def generate_qrs_button(self, obj):
         return format_html(
-            '<a class="button" href="generate-qrs/{}/" style="background-color: #28a745;">Generate All QR Codes</a>',
+            '''
+            <a href="generate-qrs/{}/"
+               style="display:inline-flex;align-items:center;gap:6px;
+                      padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+                      text-decoration:none;color:#fff;
+                      background:linear-gradient(135deg,#1a5276,#2e86c1);
+                      box-shadow:0 2px 6px rgba(30,80,130,.35);
+                      transition:all .2s;border:none;cursor:pointer;"
+               onmouseover="this.style.background='linear-gradient(135deg,#154360,#1a5276)';
+                            this.style.boxShadow='0 4px 12px rgba(30,80,130,.45)'"
+               onmouseout="this.style.background='linear-gradient(135deg,#1a5276,#2e86c1)';
+                           this.style.boxShadow='0 2px 6px rgba(30,80,130,.35)'">
+              <i class="fas fa-qrcode"></i> Générer QR
+            </a>
+            ''',
             obj.id
         )
     generate_qrs_button.short_description = ""
-    
-    def download_qrs_button(self, obj):
-        return format_html(
-            '<a class="button" href="download-qrs/{}/" style="background-color: #17a2b8;">Download All QR Codes (ZIP)</a>',
-            obj.id
-        )
-    download_qrs_button.short_description = ""
-    
+
     def print_pdf_button(self, obj):
         return format_html(
-            '<a class="button" href="print-pdf/{}/" style="background-color: #dc3545;">Print PDF (sieges + QR)</a>',
+            '''
+            <a href="print-pdf/{}/"
+               style="display:inline-flex;align-items:center;gap:6px;
+                      padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;
+                      text-decoration:none;color:#fff;
+                      background:linear-gradient(135deg,#7b241c,#c0392b);
+                      box-shadow:0 2px 6px rgba(150,30,30,.35);
+                      transition:all .2s;border:none;cursor:pointer;"
+               onmouseover="this.style.background='linear-gradient(135deg,#641e16,#7b241c)';
+                            this.style.boxShadow='0 4px 12px rgba(150,30,30,.45)'"
+               onmouseout="this.style.background='linear-gradient(135deg,#7b241c,#c0392b)';
+                           this.style.boxShadow='0 2px 6px rgba(150,30,30,.35)'">
+              <i class="fas fa-file-pdf"></i> Imprimer PDF
+            </a>
+            ''',
             obj.id
         )
     print_pdf_button.short_description = ""
-    
+
     def get_urls(self):
         def generate_qrs(request, amphi_id):
-            amphi = get_object_or_404(Amphi, pk=amphi_id)
+            amphi   = get_object_or_404(Amphi, pk=amphi_id)
             created = amphi.generate_all_siege_qrs()
             if created > 0:
-                messages.success(request, f"Successfully generated {created} QR codes for {amphi.nom}")
+                messages.success(
+                    request,
+                    f" {created} QR code(s) générés avec succès pour {amphi.nom}."
+                )
             else:
-                messages.info(request, f"All QR codes already exist for {amphi.nom}")
-            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/admin/salles/amphi/'))
-        
+                messages.info(
+                    request,
+                    f"ℹ️ Tous les QR codes existent déjà pour {amphi.nom}."
+                )
+            return HttpResponseRedirect(
+                request.META.get('HTTP_REFERER', '/admin/salles/amphi/')
+            )
+
         def download_qrs(request, amphi_id):
             amphi = get_object_or_404(Amphi, pk=amphi_id)
-            
-            # First generate any missing QR codes
             amphi.generate_all_siege_qrs()
-            
+
             buffer = BytesIO()
             with zipfile.ZipFile(buffer, 'w') as zip_file:
-                for siege in amphi.sieges.all():
-                    if siege.qr_code and siege.qr_code.path:
+                for s in amphi.sieges.all():
+                    if s.qr_code and s.qr_code.path:
                         try:
-                            if os.path.exists(siege.qr_code.path):
-                                with open(siege.qr_code.path, 'rb') as f:
-                                    zip_file.writestr(f"{amphi.nom}_siege_{siege.siege_number}.png", f.read())
+                            if os.path.exists(s.qr_code.path):
+                                with open(s.qr_code.path, 'rb') as f:
+                                    zip_file.writestr(
+                                        f"{amphi.nom}_siege_{s.siege_number}.png",
+                                        f.read()
+                                    )
                         except Exception as e:
-                            print(f"Error adding {siege}: {e}")
-            
+                            print(f"Erreur ajout {s}: {e}")
+
             buffer.seek(0)
             response = HttpResponse(buffer, content_type='application/zip')
-            response['Content-Disposition'] = f'attachment; filename="{amphi.nom}_all_qr_codes.zip"'
+            response['Content-Disposition'] = (
+                f'attachment; filename="{amphi.nom}_all_qr_codes.zip"'
+            )
             return response
-        
+
         def print_pdf(request, amphi_id):
             amphi = get_object_or_404(Amphi, pk=amphi_id)
-            
-            # Generate any missing QR codes first
             amphi.generate_all_siege_qrs()
-            
-            # Create PDF
+
             response = HttpResponse(content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="{amphi.nom}_sieges_qrcodes.pdf"'
-            
-            # Create PDF with landscape A4
+            response['Content-Disposition'] = (
+                f'attachment; filename="{amphi.nom}_sieges_qrcodes.pdf"'
+            )
+
             pdf = canvas.Canvas(response, pagesize=landscape(A4))
             width, height = landscape(A4)
-            
-            # Define grid layout (4 columns x 5 rows = 20 sieges per page)
-            cols = 4
-            rows_per_page = 5
-            cell_width = (width - 30) / cols
-            cell_height = (height - 80) / rows_per_page
-            
-            # Get all sieges ordered by number
-            sieges = amphi.sieges.all().order_by('siege_number')
-            
-            # Calculate total pages
-            sieges_list = list(sieges)
+
+            cols           = 4
+            rows_per_page  = 5
+            cell_width     = (width - 30) / cols
+            cell_height    = (height - 80) / rows_per_page
+
+            sieges_list    = list(amphi.sieges.all().order_by('siege_number'))
             sieges_per_page = cols * rows_per_page
-            total_pages = (len(sieges_list) + sieges_per_page - 1) // sieges_per_page
-            
-            # Get current date and time
-            now = datetime.now()
-            current_date = now.strftime("%Y-%m-%d %H:%M:%S")
-            
+            total_pages    = (len(sieges_list) + sieges_per_page - 1) // sieges_per_page
+            current_date   = datetime.now().strftime("%d/%m/%Y %H:%M")
+
             for page_num in range(total_pages):
                 if page_num > 0:
                     pdf.showPage()
-                
-                # Add header
+
+                # ── Header ──
+                pdf.setFillColorRGB(0.10, 0.23, 0.36)
+                pdf.rect(0, height - 55, width, 55, stroke=0, fill=1)
+
+                pdf.setFillColorRGB(1, 1, 1)
                 pdf.setFont("Helvetica-Bold", 16)
-                pdf.drawCentredString(width/2, height - 30, f"{amphi.nom} - sieges with QR Codes")
+                pdf.drawCentredString(
+                    width / 2, height - 28,
+                    f"{amphi.nom}  —  Sièges & QR Codes"
+                )
                 pdf.setFont("Helvetica", 10)
-                pdf.drawCentredString(width/2, height - 45, f"Total sieges: {len(sieges_list)} | Page {page_num + 1} of {total_pages}")
-                
-                # Draw grid lines and content
+                pdf.drawCentredString(
+                    width / 2, height - 45,
+                    f"Total sièges : {len(sieges_list)}  |  "
+                    f"Page {page_num + 1} / {total_pages}"
+                )
+
+                # ── Grid ──
                 start_idx = page_num * sieges_per_page
-                end_idx = min(start_idx + sieges_per_page, len(sieges_list))
-                
+                end_idx   = min(start_idx + sieges_per_page, len(sieges_list))
+
                 for idx in range(start_idx, end_idx):
-                    siege = sieges_list[idx]
+                    s         = sieges_list[idx]
                     local_idx = idx - start_idx
-                    row = local_idx // cols
-                    col = local_idx % cols
-                    
-                    x = 15 + (col * cell_width)
-                    y = height - 80 - (row * cell_height)
-                    
-                    # Draw cell border
-                    pdf.rect(x, y - cell_height + 15, cell_width - 5, cell_height - 15)
-                    
-                    # Add siege number
-                    pdf.setFont("Helvetica-Bold", 14)
-                    pdf.drawCentredString(x + (cell_width - 5)/2, y - 15, f"siege #{siege.siege_number}")
-                    
-                    # Add QR code if exists
-                    if siege.qr_code and siege.qr_code.path and os.path.exists(siege.qr_code.path):
+                    row       = local_idx // cols
+                    col       = local_idx % cols
+
+                    cx = 15 + col * cell_width
+                    cy = height - 80 - row * cell_height
+
+                    # Cell background (alternating)
+                    bg = (0.97, 0.98, 1.0) if local_idx % 2 == 0 else (1, 1, 1)
+                    pdf.setFillColorRGB(*bg)
+                    pdf.roundRect(cx, cy - cell_height + 15,
+                                  cell_width - 8, cell_height - 15,
+                                  6, stroke=0, fill=1)
+
+                    # Cell border
+                    pdf.setStrokeColorRGB(0.78, 0.85, 0.93)
+                    pdf.setLineWidth(0.8)
+                    pdf.roundRect(cx, cy - cell_height + 15,
+                                  cell_width - 8, cell_height - 15,
+                                  6, stroke=1, fill=0)
+
+                    cell_inner_w = cell_width - 8
+                    cell_inner_h = cell_height - 15
+                    cell_y_bot   = cy - cell_height + 15
+
+                    # ── Left zone: big seat number ──
+                    left_w = cell_inner_w * 0.42
+                    # Vertical divider
+                    pdf.setStrokeColorRGB(0.78, 0.85, 0.93)
+                    pdf.setLineWidth(0.6)
+                    pdf.line(cx + left_w, cell_y_bot + 10,
+                             cx + left_w, cy - 10)
+
+                    # "SIÈGE" label
+                    pdf.setFillColorRGB(0.55, 0.65, 0.75)
+                    pdf.setFont("Helvetica", 7)
+                    pdf.drawCentredString(cx + left_w / 2, cy - 18, "SIÈGE")
+
+                    # Big seat number
+                    pdf.setFillColorRGB(0.10, 0.23, 0.36)
+                    num_font_size = 38
+                    pdf.setFont("Helvetica-Bold", num_font_size)
+                    num_y = cell_y_bot + cell_inner_h / 2 - num_font_size / 2 + 4
+                    pdf.drawCentredString(cx + left_w / 2, num_y,
+                                         str(s.siege_number))
+
+                    # ── Right zone: QR code ──
+                    right_x  = cx + left_w + 6
+                    right_w  = cell_inner_w - left_w - 8
+                    qr_pad   = 10
+                    qr_size  = min(right_w - qr_pad * 2,
+                                   cell_inner_h - qr_pad * 2)
+                    qr_x     = right_x + (right_w - qr_size) / 2
+                    qr_y     = cell_y_bot + (cell_inner_h - qr_size) / 2
+
+                    if (s.qr_code and s.qr_code.path
+                            and os.path.exists(s.qr_code.path)):
                         try:
-                            # Calculate QR size (70% of cell width)
-                            qr_size = min(cell_width - 20, cell_height - 50)
-                            qr_x = x + (cell_width - 5 - qr_size) / 2
-                            qr_y = y - cell_height + 35
-                            
-                            # Draw QR code
                             from reportlab.lib.utils import ImageReader
-                            img_reader = ImageReader(siege.qr_code.path)
-                            pdf.drawImage(img_reader, qr_x, qr_y, width=qr_size, height=qr_size)
-                        except Exception as e:
+                            pdf.drawImage(
+                                ImageReader(s.qr_code.path),
+                                qr_x, qr_y,
+                                width=qr_size, height=qr_size
+                            )
+                        except Exception:
+                            pdf.setFillColorRGB(0.6, 0.6, 0.6)
                             pdf.setFont("Helvetica", 8)
-                            pdf.drawCentredString(x + (cell_width - 5)/2, y - cell_height/2, "QR Error")
+                            pdf.drawCentredString(right_x + right_w / 2,
+                                                  cell_y_bot + cell_inner_h / 2,
+                                                  "Erreur QR")
                     else:
-                        pdf.setFont("Helvetica", 10)
-                        pdf.drawCentredString(x + (cell_width - 5)/2, y - cell_height/2, "No QR Code")
-                
-                # Add footer
+                        pdf.setFillColorRGB(0.6, 0.6, 0.6)
+                        pdf.setFont("Helvetica", 9)
+                        pdf.drawCentredString(right_x + right_w / 2,
+                                              cell_y_bot + cell_inner_h / 2,
+                                              "QR non généré")
+
+                # ── Footer ──
+                pdf.setFillColorRGB(0.95, 0.96, 0.98)
+                pdf.rect(0, 0, width, 22, stroke=0, fill=1)
+                pdf.setFillColorRGB(0.45, 0.55, 0.65)
                 pdf.setFont("Helvetica", 8)
-                pdf.drawCentredString(width/2, 15, f"Generated on {current_date} | FMPL Exam Management System")
-            
+                pdf.drawCentredString(
+                    width / 2, 7,
+                    f"Généré le {current_date}  |  Système de Gestion des Examens FMPL"
+                )
+
             pdf.save()
             return response
-        
+
         custom_urls = [
             path('generate-qrs/<int:amphi_id>/', generate_qrs, name='generate_qrs'),
             path('download-qrs/<int:amphi_id>/', download_qrs, name='download_qrs'),
-            path('print-pdf/<int:amphi_id>/', print_pdf, name='print_pdf'),
+            path('print-pdf/<int:amphi_id>/',   print_pdf,     name='print_pdf'),
         ]
         return custom_urls + super().get_urls()
+
 
 @admin.register(siege)
 class siegeAdmin(admin.ModelAdmin):
     list_display = ('amphi', 'siege_number', 'qr_code_preview')
-    list_filter = ('amphi',)
-    
+    list_filter  = ('amphi',)
+
     def qr_code_preview(self, obj):
         if obj.qr_code:
-            return format_html('<img src="{}" width="50" height="50" />', obj.qr_code.url)
-        return "No QR"
+            return format_html(
+                '<img src="{}" width="50" height="50" '
+                'style="border-radius:6px;border:1px solid #ddd;padding:2px"/>',
+                obj.qr_code.url
+            )
+        return format_html(
+            '<span style="color:#999;font-size:12px;font-style:italic">Non généré</span>'
+        )
     qr_code_preview.short_description = "QR Code"

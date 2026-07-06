@@ -163,6 +163,7 @@ def etudiant_dashboard(request):
 
     from etudiants.models import Etudiant
     from examens.models import Repartition, Examen
+    from examens.utils import decode_seat_position   # ← nouvel import
 
     try:
         etudiant = Etudiant.objects.select_related("annee").get(pk=etudiant_id)
@@ -193,11 +194,15 @@ def etudiant_dashboard(request):
             ).first()
             numero_siege = assignment.numero if assignment else None
 
+        # ── Décode la position physique du siège (table / côté / place) ──
+        seat_position = decode_seat_position(numero_siege) if numero_siege else None
+
         examens_data.append({
-            "examen":       examen,
-            "repartition":  repartition,
-            "numero_siege": numero_siege,
-            "is_today":     examen.date == today,
+            "examen":        examen,
+            "repartition":   repartition,
+            "numero_siege":  numero_siege,
+            "seat_position": seat_position,   # ← table, cote, position_cote, label, svg_cy...
+            "is_today":      examen.date == today,
         })
 
     return render(request, "portal/etudiant_dashboard.html", {
@@ -205,8 +210,6 @@ def etudiant_dashboard(request):
         "examens":       examens_data,
         "examens_count": len(examens_data),
     })
-
-
 # ─────────────────────────────────────────────────────────────────
 # HELPER
 # ─────────────────────────────────────────────────────────────────

@@ -180,18 +180,19 @@
                         <a href="{% url 'examens:send_convocation_email_session' surveillant.id session_id %}" 
                         class="btn-convocation" style="background:#2980b9"
                         onclick="return confirm('Envoyer par email à {{ surveillant.nom }} ?')">📧 Email</a>
-                        <a href="{% url 'examens:send_convocation_whatsapp_session' surveillant.id session_id %}" 
+                       <!-- <a href="{% url 'examens:send_convocation_whatsapp_session' surveillant.id session_id %}" 
                         class="btn-convocation" style="background:#25d366"
-                        onclick="return confirm('Envoyer sur WhatsApp à {{ surveillant.nom }} ?')">💬 WhatsApp</a>
+                        onclick="return confirm('Envoyer sur WhatsApp à {{ surveillant.nom }} ?')">💬 WhatsApp</a>-->
                     {% else %}
                         <a href="{% url 'examens:generate_convocation_surveillant' surveillant.id %}" 
                         class="btn-convocation" target="_blank">📄 PDF</a>
                         <a href="{% url 'examens:send_convocation_email' surveillant.id %}" 
                         class="btn-convocation" style="background:#2980b9"
                         onclick="return confirm('Envoyer par email à {{ surveillant.nom }} ?')">📧 Email</a>
-                        <a href="{% url 'examens:send_convocation_whatsapp' surveillant.id %}" 
+                        
+                        <!--<a href="{% url 'examens:send_convocation_whatsapp' surveillant.id %}" 
                         class="btn-convocation" style="background:#25d366"
-                        onclick="return confirm('Envoyer sur WhatsApp à {{ surveillant.nom }} ?')">💬 WhatsApp</a>
+                        onclick="return confirm('Envoyer sur WhatsApp à {{ surveillant.nom }} ?')">💬 WhatsApp</a>-->
                     {% endif %}
                     </td>
                     
@@ -200,7 +201,7 @@
                 {% empty %}
                 <tr>
                     <td colspan="7" style="text-align: center; padding: 40px;">
-                        ❌ Aucun surveillant trouvé pour cette session
+                         Aucun surveillant trouvé pour cette session
                     </td>
                 </tr>
                 {% endfor %}

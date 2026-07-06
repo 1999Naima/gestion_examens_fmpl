@@ -70,8 +70,9 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
 
 /* affectation box */
 .affectation-box{background:var(--off);border:1.5px solid var(--border);
-  border-radius:10px;padding:12px 14px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px}
+  border-radius:10px;padding:12px 14px}
+.affectation-top{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-bottom:10px}
 .affectation-left{display:flex;flex-direction:column;gap:3px}
 .aff-label{font-size:10px;color:var(--txt-s);letter-spacing:.5px;text-transform:uppercase}
 .aff-amphi{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--teal-d)}
@@ -81,6 +82,29 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
   font-family:'Syne',sans-serif;font-size:14px;font-weight:800;color:var(--white)}
 .siege-label{font-size:12px;color:var(--txt-m)}
 .no-affectation{font-size:12px;color:var(--txt-s);font-style:italic}
+
+/* seat location indicator (text) */
+.seat-indicator{display:flex;align-items:center;gap:6px;
+  background:var(--gold-l);border:1px solid rgba(201,168,76,.3);
+  border-radius:8px;padding:7px 10px;margin-bottom:0;
+  font-size:12px;color:#7a6020;font-weight:500}
+
+/* dropdown toggle for the abstract seat diagram */
+.seat-toggle{display:flex;align-items:center;justify-content:space-between;
+  gap:8px;width:100%;background:none;border:none;cursor:pointer;
+  padding:8px 0 0;font-family:'DM Sans',sans-serif;font-size:12px;
+  font-weight:500;color:var(--teal);text-align:left}
+.seat-toggle:hover{color:var(--teal-l)}
+.seat-toggle .chevron{transition:transform .2s;font-size:10px;color:var(--txt-s)}
+.seat-toggle.open .chevron{transform:rotate(180deg)}
+.seat-dropdown{max-height:0;overflow:hidden;transition:max-height .25s ease}
+.seat-dropdown.open{max-height:260px}
+
+/* abstract amphi diagram */
+.amphi-diagram{display:flex;justify-content:center;padding:10px 0 4px}
+.amphi-diagram svg{max-width:100%;height:auto}
+.diagram-caption{text-align:center;font-size:10px;color:var(--txt-s);
+  letter-spacing:.3px;margin-top:6px;padding-bottom:4px}
 
 /* ── Empty ── */
 .empty{text-align:center;padding:48px 20px;color:var(--txt-s)}
@@ -149,20 +173,82 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
 
       {% if item.repartition %}
       <div class="affectation-box">
-        <div class="affectation-left">
-          <span class="aff-label">Salle affectée</span>
-          <span class="aff-amphi">{{ item.repartition.amphi.nom }}</span>
+        <div class="affectation-top">
+          <div class="affectation-left">
+            <span class="aff-label">Salle affectée</span>
+            <span class="aff-amphi">{{ item.repartition.amphi.nom }}</span>
+          </div>
+          {% if item.numero_siege %}
+          <div class="aff-siege">
+            <div class="siege-num">{{ item.numero_siege }}</div>
+            <span class="siege-label">N° de siège</span>
+          </div>
+          {% endif %}
         </div>
-        {% if item.numero_siege %}
-        <div class="aff-siege">
-          <div class="siege-num">{{ item.numero_siege }}</div>
-          <span class="siege-label">N° de siège</span>
+
+        {% if item.seat_position %}
+        <!-- Texte indicatif -->
+        <div class="seat-indicator">
+          {{ item.seat_position.label|capfirst }}
+        </div>
+
+        <!-- Bouton pour afficher/masquer le diagramme -->
+        <button type="button" class="seat-toggle" onclick="toggleSeatDiagram(this)">
+          <span>🗺️ Voir l'emplacement sur le plan de la salle</span>
+          <span class="chevron">▼</span>
+        </button>
+
+        <!-- Diagramme abstrait de l'amphi (caché par défaut) -->
+        <div class="seat-dropdown">
+          <div class="amphi-diagram">
+            <svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
+              <!-- Tableau / estrade en haut -->
+              <rect x="90" y="6" width="100" height="16" rx="3" fill="#c9a84c" opacity="0.9"/>
+              <text x="140" y="17" text-anchor="middle" font-size="8" fill="#fff"
+                    font-family="DM Sans, sans-serif" font-weight="600">TABLEAU</text>
+
+              <!-- Zone de la salle -->
+              <rect x="16" y="28" width="248" height="118" rx="6" fill="#f4fbf9" stroke="#cde8e4" stroke-width="1"/>
+
+              <!-- Allée centrale -->
+              <line x1="140" y1="28" x2="140" y2="146" stroke="#cde8e4" stroke-width="2" stroke-dasharray="3,3"/>
+
+              <!-- Bloc gauche -->
+              <rect x="24" y="28" width="100" height="118" rx="4"
+                    fill="{% if item.seat_position.cote == 'gauche' %}#e3f0ed{% else %}#f4fbf9{% endif %}"
+                    stroke="#dce8e4" stroke-width="0.5"/>
+              <!-- Bloc droit -->
+              <rect x="156" y="28" width="100" height="118" rx="4"
+                    fill="{% if item.seat_position.cote == 'droite' %}#e3f0ed{% else %}#f4fbf9{% endif %}"
+                    stroke="#dce8e4" stroke-width="0.5"/>
+
+              <!-- Point indicateur de la table active -->
+              <circle
+                cx="{% if item.seat_position.cote == 'gauche' %}74{% else %}206{% endif %}"
+                cy="{{ item.seat_position.svg_cy }}"
+                r="9" fill="#1a5c52" stroke="#fff" stroke-width="2"/>
+              <text
+                x="{% if item.seat_position.cote == 'gauche' %}74{% else %}206{% endif %}"
+                y="{{ item.seat_position.svg_cy_text }}"
+                text-anchor="middle" font-size="8" fill="#fff"
+                font-family="DM Sans, sans-serif" font-weight="700">{{ item.seat_position.table }}</text>
+
+              <!-- Étiquette latérale -->
+              <text x="74" y="158" text-anchor="middle" font-size="7" fill="#8fb3ae"
+                    font-family="DM Sans, sans-serif">Gauche</text>
+              <text x="206" y="158" text-anchor="middle" font-size="7" fill="#8fb3ae"
+                    font-family="DM Sans, sans-serif">Droite</text>
+            </svg>
+          </div>
+          <div class="diagram-caption">
+            Le point bleu indique l'emplacement approximatif de votre table ({{ item.seat_position.table }})
+          </div>
         </div>
         {% endif %}
       </div>
       {% else %}
       <div class="notice">
-        ℹ️ L'affectation de salle n'est pas encore disponible pour cet examen.
+        L'affectation de salle n'est pas encore disponible pour cet examen.
       </div>
       {% endif %}
     </div>
@@ -176,5 +262,18 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
   {% endif %}
 
 </div>
+
+<script>
+function toggleSeatDiagram(btn) {
+  var dropdown = btn.nextElementSibling;
+  var isOpen = dropdown.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  var label = btn.querySelector('span:first-child');
+  label.textContent = isOpen
+    ? "🗺️ Masquer le plan de la salle"
+    : "🗺️ Voir l'emplacement sur le plan de la salle";
+}
+</script>
+
 </body>
 </html>

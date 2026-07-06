@@ -13,22 +13,19 @@ class Amphi(models.Model):
         return self.nom
     
     def generate_all_siege_qrs(self):
-        """Generate QR codes for all sieges (1 to capacite)"""
         created = 0
         for siege_num in range(1, self.capacite + 1):
-            siege, created_flag = siege.objects.get_or_create(
+            siege_obj, created_flag = siege.objects.get_or_create(
                 amphi=self,
                 siege_number=siege_num
             )
             if created_flag:
-                # Generate QR code for new siege
-                siege.generate_qr_code()
-                siege.save()
+                siege_obj.generate_qr_code()
+                siege_obj.save()
                 created += 1
-            elif not siege.qr_code:
-                # If siege exists but no QR code, generate it
-                siege.generate_qr_code()
-                siege.save()
+            elif not siege_obj.qr_code:
+                siege_obj.generate_qr_code()
+                siege_obj.save()
                 created += 1
         return created
 

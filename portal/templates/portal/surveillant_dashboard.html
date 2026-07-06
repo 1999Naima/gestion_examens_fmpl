@@ -145,7 +145,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
 
 <div class="page">
 
-  <div class="section-title">📷 Scanner QR</div>
+  <div class="section-title">Scanner QR</div>
   <div class="scanner-card">
     <div class="scanner-head">
       <span class="scanner-head-title">Scanner le QR code du siège</span>
@@ -159,7 +159,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--off);col
     </div>
   </div>
 
-  <div class="section-title">📋 Mes examens du jour</div>
+  <div class="section-title">Mes examens du jour</div>
 
   {% if repartitions %}
     {% for rep in repartitions %}
@@ -335,12 +335,12 @@ async function onQrSuccess(decodedText) {
   // Step 2 — parse
   const match = decodedText.match(/Amphi:\s*(.+?)\s*\|\s*siege:\s*(\d+)/i);
   if (!match) {
-    showScanResult('❌ Format invalide : [' + decodedText + ']', false);
+    showScanResult('Format invalide : [' + decodedText + ']', false);
     return;
   }
 
   const siegeNumber = parseInt(match[2]);
-  showScanResult('✅ Siège ' + siegeNumber + ' détecté — envoi au serveur...', true);
+  showScanResult('Siège ' + siegeNumber + ' détecté — envoi au serveur...', true);
 
   if (html5QrCode) html5QrCode.pause();
 
@@ -357,13 +357,13 @@ async function onQrSuccess(decodedText) {
     try {
       data = JSON.parse(text);
     } catch(e) {
-      showScanResult('❌ Réponse non-JSON du serveur : ' + text.substring(0, 200), false);
+      showScanResult('Réponse non-JSON du serveur : ' + text.substring(0, 200), false);
       setTimeout(() => { if (html5QrCode && scannerOpen) html5QrCode.resume(); }, 5000);
       return;
     }
 
     if (resp.ok && data.ok) {
-      showScanResult('✓ ' + data.nom + ' — Siège ' + siegeNumber + ' — Présence enregistrée ✅', true);
+      showScanResult('✓ ' + data.nom + ' — Siège ' + siegeNumber + ' — Présence enregistrée', true);
       showToast('✓ ' + data.nom + ' présent', 'green');
       // Update button in list if panel is open
       const btn = document.getElementById(`btn-${data.rep_id}-${data.etudiant_id}`);
@@ -374,11 +374,11 @@ async function onQrSuccess(decodedText) {
         updateCounts(data.rep_id);
       }
     } else {
-      showScanResult('❌ ' + (data.error || 'Erreur inconnue'), false);
+      showScanResult(' ' + (data.error || 'Erreur inconnue'), false);
     }
 
   } catch(e) {
-    showScanResult('❌ Erreur réseau : ' + e.message, false);
+    showScanResult(' Erreur réseau : ' + e.message, false);
   }
 
   setTimeout(() => { if (html5QrCode && scannerOpen) html5QrCode.resume(); }, 5000);

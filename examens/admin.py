@@ -53,7 +53,9 @@ class RepartitionAdmin(admin.ModelAdmin):
     form = RepartitionAdminForm
     filter_horizontal = ("etudiants",)
     change_form_template = "admin/examens/repartition/change_form.html"
-    list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'presence_button', 'proces_verbal_button')
+    #list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'presence_button', 'proces_verbal_button')
+    #list_filter = ('examen__niveau', 'examen__semester', 'examen__annee', 'amphi')
+    list_display = ('examen', 'amphi', 'get_students_count', 'get_surveillants_count', 'sieges_status', 'presence_button', 'proces_verbal_button')
     list_filter = ('examen__niveau', 'examen__semester', 'examen__annee', 'amphi')
     search_fields = ('examen__module', 'amphi__nom')
     actions = ['generate_presence_list', 'assigner_sieges']  # ← ajouté ici
@@ -106,9 +108,9 @@ class RepartitionAdmin(admin.ModelAdmin):
                 )
 
             self.message_user(request,
-                f"✅ {len(etudiants)} sièges assignés pour {rep.amphi.nom}.",
+                f" {len(etudiants)} sièges assignés pour {rep.amphi.nom}.",
                 messages.SUCCESS)
-    assigner_sieges.short_description = "🪑 Assigner les sièges automatiquement"
+    assigner_sieges.short_description = "Assigner les sièges automatiquement"
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -123,6 +125,29 @@ class RepartitionAdmin(admin.ModelAdmin):
         return obj.surveillants.count()
     get_surveillants_count.short_description = "Nombre de surveillants"
 
+    def sieges_status(self, obj):
+        from examens.models import Repartitionsiege
+        assigned = Repartitionsiege.objects.filter(repartition=obj).count()
+        total    = obj.etudiants.count()
+        if assigned == 0:
+            return format_html(
+                '<span style="color:#c0392b;font-weight:600;font-size:13px">'
+                '✗ Non assigné</span>'
+            )
+        elif assigned < total:
+            return format_html(
+                '<span style="color:#e67e22;font-weight:600;font-size:13px">'
+                '⚠ Partiel ({}/{})</span>',
+                assigned, total
+            )
+        else:
+            return format_html(
+                '<span style="color:#27ae60;font-weight:600;font-size:13px">'
+                '✓ Assigné ({})</span>',
+                assigned
+            )
+    sieges_status.short_description = "Sièges"
+  
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 

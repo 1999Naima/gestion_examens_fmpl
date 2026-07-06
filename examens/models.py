@@ -64,13 +64,13 @@ class Examen(models.Model):
         from django.core.exceptions import ValidationError
         from datetime import time
 
-        # ✅ 1. End time must be after start time
+        #  1. End time must be after start time
         if self.heure_fin <= self.heure_debut:
             raise ValidationError({
                 'heure_fin': "L'heure de fin doit être après l'heure de début."
             })
 
-        # ✅ 2. Check overlapping exams for the SAME DATE, SAME YEAR, AND SAME LEVEL
+        # 2. Check overlapping exams for the SAME DATE, SAME YEAR, AND SAME LEVEL
         conflits = Examen.objects.filter(
             date=self.date,
             annee=self.annee,
@@ -97,10 +97,28 @@ class Repartition(models.Model):
     surveillants = models.ManyToManyField(Surveillant)
     amphi = models.ForeignKey(Amphi, on_delete=models.CASCADE)
     etudiants = models.ManyToManyField(Etudiant, blank=True)
-    
+
+    class Meta:
+        # Empêche deux Repartition différentes pour le même examen + même amphi
+        unique_together = [('examen', 'amphi')]
+
     def __str__(self):
         return f"{self.examen} - {self.amphi}"
-    
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        conflit = Repartition.objects.filter(
+            examen=self.examen,
+            amphi=self.amphi,
+        ).exclude(pk=self.pk)
+
+        if conflit.exists():
+            raise ValidationError(
+                f"Une répartition existe déjà pour l'examen '{self.examen}' "
+                f"dans l'amphi '{self.amphi.nom}'. "
+                f"Modifiez la répartition existante au lieu d'en créer une nouvelle."
+            )
 
 
 from salles.models import siege

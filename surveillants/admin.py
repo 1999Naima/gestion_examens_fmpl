@@ -45,7 +45,7 @@ class SurveillantAdmin(admin.ModelAdmin):
 
         if created:
             self.message_user(request,
-                f"✅ {created} compte(s) créé(s). Mot de passe par défaut : fmpl2026",
+                f"{created} compte(s) créé(s). Mot de passe par défaut : fmpl2026",
                 messages.SUCCESS)
         if skipped:
             self.message_user(request,

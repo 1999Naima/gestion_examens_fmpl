@@ -36,7 +36,7 @@ class RepartitionAdminForm(forms.ModelForm):
                 )
         
         # -----------------------------
-        # ✅ 1. Surveillant conflict (check time overlap)
+        #  1. Surveillant conflict (check time overlap)
         # -----------------------------
         if surveillants:
             for surveillant in surveillants:
@@ -62,7 +62,7 @@ class RepartitionAdminForm(forms.ModelForm):
                         )
         
         # -----------------------------
-        # ✅ 2. Amphi conflict
+        # 2. Amphi conflict
         # -----------------------------
         if amphi:
             same_date_exams = Examen.objects.filter(date=examen.date).exclude(pk=examen.pk)
@@ -86,7 +86,7 @@ class RepartitionAdminForm(forms.ModelForm):
                         )
         
         # -----------------------------
-        # ✅ 3. Prevent duplicate student assignment
+        # 3. Prevent duplicate student assignment
         # -----------------------------
         if etudiants:
             for etudiant in etudiants:
