@@ -626,7 +626,7 @@ def send_convocation_email(request, surveillant_id, session_id=None):
     surveillant = get_object_or_404(Surveillant, pk=surveillant_id)
 
     if not surveillant.email:
-        messages.error(request, f"❌ {surveillant.nom} n'a pas d'adresse email.")
+        messages.error(request, f" {surveillant.nom} n'a pas d'adresse email.")
         return redirect('examens:convocations')
 
     try:
@@ -643,9 +643,9 @@ def send_convocation_email(request, surveillant_id, session_id=None):
         )
         mail.attach(f'convocation_{surveillant.nom}.pdf', pdf_bytes, 'application/pdf')
         mail.send()
-        messages.success(request, f"✅ Email envoyé à {surveillant.nom} ({surveillant.email})")
+        messages.success(request, f"Email envoyé à {surveillant.nom} ({surveillant.email})")
     except Exception as e:
-        messages.error(request, f"❌ Erreur envoi email : {str(e)}")
+        messages.error(request, f" Erreur envoi email : {str(e)}")
 
     return redirect('examens:convocations')
 
@@ -694,7 +694,7 @@ def send_convocation_whatsapp(request, surveillant_id, session_id=None):
             to=f'whatsapp:{phone}',
             body='\n'.join(lines),
         )
-        messages.success(request, f"✅ WhatsApp envoyé à {surveillant.nom} ({phone})")
+        messages.success(request, f" WhatsApp envoyé à {surveillant.nom} ({phone})")
     except Exception as e:
         messages.error(request, f"❌ Erreur WhatsApp : {str(e)}")
 

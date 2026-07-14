@@ -16,7 +16,7 @@ class SurveillantAdmin(admin.ModelAdmin):
     has_account.boolean = True
     has_account.short_description = "Compte créé"
 
-    @admin.action(description="✅ Créer un compte utilisateur pour le(s) surveillant(s) sélectionné(s)")
+    @admin.action(description="Créer un compte utilisateur pour le(s) surveillant(s) sélectionné(s)")
     def create_user_account(self, request, queryset):
         from portal.models import UserProfile
         created, skipped = 0, 0
@@ -49,7 +49,7 @@ class SurveillantAdmin(admin.ModelAdmin):
                 messages.SUCCESS)
         if skipped:
             self.message_user(request,
-                f"⚠️ {skipped} surveillant(s) avaient déjà un compte.",
+                f" {skipped} surveillant(s) avaient déjà un compte.",
                 messages.WARNING)
     
    

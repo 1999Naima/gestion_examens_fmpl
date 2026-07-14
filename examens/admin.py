@@ -93,7 +93,7 @@ class RepartitionAdmin(admin.ModelAdmin):
 
             if len(sieges) < len(etudiants):
                 self.message_user(request,
-                    f"⚠️ {rep.amphi.nom} : {len(sieges)} sièges mais {len(etudiants)} étudiants.",
+                    f" {rep.amphi.nom} : {len(sieges)} sièges mais {len(etudiants)} étudiants.",
                     messages.WARNING)
                 continue
 
